@@ -6,6 +6,7 @@ from torch.utils.data import TensorDataset, DataLoader
 
 
 def load_file(filename):
+    """reads text file where sentences are separated by newlines."""
     with open(filename, 'r', encoding='utf-8') as f:
         data = f.readlines()
     return data
@@ -81,18 +82,8 @@ def preprocess_data(sentences, tokenizer, segment_size):
         A list of sentences to be preprocessed.
     tokenizer: transformers.PreTrainedTokenizer
         The BERT's pre-trained tokenizer.
-    encoding_dict: dict
-        The dictionary where keys are labels and values are indices.
     segment_size: int
         The size of the sample (X).
-    include_punctuations: bool
-        A flag for including the case label (default: True).
-    include_case: bool
-        A flag for including the case label (default: True).
-    multiple_labels: bool
-        A flag whether to use multiple labels (default: False).
-        This is important iff `include_case` and `include_punctuation`
-        are `True`.
     
     Returns
     -------
@@ -103,7 +94,7 @@ def preprocess_data(sentences, tokenizer, segment_size):
     X = insert_target(X, segment_size)
     return X
 
-def create_data_loader(X, shuffle, batch_size):
+def create_data_loader(X, batch_size):
     """
     Converts samples (X) and labels (Y) into TensorDataset.
 
@@ -113,8 +104,6 @@ def create_data_loader(X, shuffle, batch_size):
         A list of encoded samples.
     Y: list(int)
         A list of encoded labels.
-    shuffle: bool
-        A flag for shuffling the data.
     batch_size: int
         The batch size.
     
@@ -124,5 +113,5 @@ def create_data_loader(X, shuffle, batch_size):
         A data loader for the data.
     """
     data_set = TensorDataset(torch.from_numpy(X).long())
-    data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=shuffle)
+    data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=False)
     return data_loader
