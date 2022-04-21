@@ -11,6 +11,10 @@ from utils import *
 class BertPuncCap(nn.Module):
     def __init__(self, BERT_model, BERT_tokenizer, checkpoint_path=''):
         """
+        Initializes the model.
+
+        Parameters
+        ----------
         BERT_model: transformers.PreTrainedModel
             The BERT pre-trained model at HuggingFace's `transformers` package.
         BERT_tokenizer: transformers.PreTrainedTokenizer
@@ -23,11 +27,7 @@ class BertPuncCap(nn.Module):
         self.bert = BERT_model
         self.bert.config.output_hidden_states=True
         self.tokenizer = BERT_tokenizer
-        self.hparams = parse_yaml(os.path.join(checkpoint_path, "config.yaml"))
-        self.punc_dict = self.hparams["punc_dict"]
-        self.encoding_dict = create_encoding_dict(
-            self.hparams["punc_class"], self.hparams["case_class"]
-        )
+        self.hparams = parse_yaml(os.path.join(checkpoint_path, "config.yaml"))      
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
@@ -35,8 +35,8 @@ class BertPuncCap(nn.Module):
         dropout_rate = self.hparams["dropout"]
         hidden_size = self.bert.config.hidden_size
         segment_size = self.hparams["segment_size"]
-        punc_size = len(self.hparams["punc_class"])
-        case_size = len(self.hparams["case_class"])
+        punc_size = len(self.hparams["class_to_punc"])
+        case_size = len(self.hparams["class_to_case"])
         # build one extra layer
         self.punc_bn = nn.BatchNorm1d(segment_size*hidden_size)
         self.punc_fc = nn.Linear(segment_size*hidden_size, punc_size)
@@ -46,39 +46,21 @@ class BertPuncCap(nn.Module):
         # load trained model's stat_dict
         self.load_state_dict(load_checkpoint(checkpoint_path, self.device))
 
-
     def forward(self, x):
         x = self.bert(x).hidden_states[-1]
         x = x.view(x.shape[0], -1)
         punc_logits = self.punc_fc(self.dropout(self.punc_bn(x)))
         case_logits = self.case_fc(self.dropout(self.case_bn(x)))
         return punc_logits, case_logits
-    
-    def _create_data_loader(self, sentences):
-        sentences = [
-            clean(sent, list(self.punc_dict.keys()), True) for sent in sentences
-        ]
-        X = preprocess_data(
-            sentences,
-            self.tokenizer,
-            self.hparams["segment_size"]
-        )
-        min_required_length = self.hparams["segment_size"] // 2
-        if len(X) < min_required_length:
-            raise ValueError("Input has very short context!" + 
-                "The input sentences must be at least {min_required_length}" +
-                "token long!")
-        data_loader = create_data_loader(X, False, 64)
-        return data_loader
-
-    def predict(self, sentences):
+       
+    def _get_labels(self, sentences):
         """
         Predicts the labels for the given data.
 
         Parameters
         ----------
-        data_loader: torch.utils.data.DataLoader
-            A data loader object for the test data (usually).
+        sentences: list(str)
+            A list of sentences to be labeled.
         
         Returns
         -------
@@ -93,10 +75,16 @@ class BertPuncCap(nn.Module):
             re-punctuation task while the other is for the re-capitalization
             task.
         """
-        # freeze model
-        self.eval()
         subwords, punc_pred, case_pred = [], [], []
-        data_loader = self._create_data_loader(sentences)
+        puncs = list(self.hparams["punc_to_class"].keys()) #punctuations
+        sentences = [
+            " ".join(self.tokenizer.tokenize(clean(sent, puncs, True)))\
+                .replace(' ##', '')
+            for sent in sentences
+        ]
+        data_loader = create_data_loader(sentences, self.tokenizer,
+                                self.hparams["segment_size"], batch_size=64)
+        # Get predictions for sub-words
         for input_batch in tqdm(data_loader, total=len(data_loader)):
             with torch.no_grad():
                 input_batch = input_batch[0]
@@ -108,24 +96,42 @@ class BertPuncCap(nn.Module):
                 punc_pred += list(punc_outputs.argmax(dim=1).cpu().data.numpy().flatten())
                 case_pred += list(case_outputs.argmax(dim=1).cpu().data.numpy().flatten())
         assert len(subwords) == len(punc_pred) == len(case_pred)
-        
-        # now, we have predictions for sub-words. Let's get the token predictions
-        i = 0
-        curr_word = ""
-        out_tokens, punc_preds, case_preds = [], [], []
-        while( i < len(subwords)):
-            curr_word += subwords[i]
-            while(i+1 < len(subwords) and subwords[i+1].startswith("##")):
-                i += 1
-                curr_word += subwords[i][2:]
-            out_tokens.append(curr_word)
-            punc_preds.append(punc_pred[i])
-            case_preds.append(case_pred[i])
-            curr_word = ""
-            i += 1
-        out_preds = [punc_preds, case_preds]
-        return out_tokens, out_preds
+        # Convert sub-token predictions to full-token predictions
+        out_tokens, punc_preds, case_preds = \
+            convert_to_full_tokens(subwords, punc_pred, case_pred)
+        return out_tokens, punc_preds, case_preds
 
+    def predict(self, sentences):
+        """
+        Punctuate & capitalize the given sentences.
+
+        Parameters
+        ----------
+        sentences: list(str)
+            A list of sentences to be labeled.
+        
+        Returns
+        -------
+        out_sentences: list(str)
+            A list of sentences labels with punctuation & cases.
+        
+        Note
+        ----
+        Punctuations & capitalization are removed from the input sentences.
+        """
+        self.eval() # freeze the model
+        # get labels
+        out_tokens, punc_preds, case_preds = self._get_labels(sentences)
+        # Apply labels to input sentences
+        out_sentences = apply_labels_to_input(
+            sentences,
+            out_tokens,
+            punc_preds,
+            case_preds,
+            self.hparams["class_to_punc"],
+            self.hparams["class_to_case"]
+        )
+        return out_sentences
 
 
 if __name__ == "__main__":
@@ -141,4 +147,4 @@ if __name__ == "__main__":
     bert_punc_cap = BertPuncCap(bert_model, bert_tokenizer, checkpoint_path)
 
     data_test = load_file('data/mTEDx/fr/test.fr')
-    x_test, y_pred_test, y_true_test = bert_punc_cap.predict(data_test)
+    out_sentences = bert_punc_cap.predict(data_test)
