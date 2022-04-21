@@ -90,8 +90,9 @@ class BertPuncCap(nn.Module):
                 input_batch = input_batch[0]
                 subword_ids = input_batch[:, (self.hparams["segment_size"]-1)//2 - 1].flatten()
                 subwords += self.tokenizer.convert_ids_to_tokens(subword_ids)
-                if self.device == torch.device('cuda'):
-                    input_batch = input_batch.cuda()
+                # move data & model to device
+                input_batch = input_batch.to(self.device)
+                self = self.to(self.device)
                 punc_outputs, case_outputs = self.forward(input_batch)
                 punc_pred += list(punc_outputs.argmax(dim=1).cpu().data.numpy().flatten())
                 case_pred += list(case_outputs.argmax(dim=1).cpu().data.numpy().flatten())
