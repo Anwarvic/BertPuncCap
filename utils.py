@@ -1,7 +1,6 @@
 import os
 import yaml
 import torch
-import string
 import warnings
 from collections import OrderedDict
 
@@ -14,15 +13,6 @@ def parse_yaml(filepath):
             raise FileExistsError(
                 "Can't find the configuration file: config.yaml"
             )
-
-def create_encoding_dict(punctuations, cases):
-    encoding_dictionary = {}
-    for i, punc in enumerate(punctuations):
-        encoding_dictionary[punc] = i
-    for i, case in enumerate(cases):
-        encoding_dictionary[case] = i
-    return encoding_dictionary
-
 
 def load_checkpoint(checkpoint_path, device):
     stat_dict = None
@@ -55,4 +45,52 @@ def load_checkpoint(checkpoint_path, device):
 def clean(text, punctuations, remove_case=True):
     """remove punctuations and possibly case of a given text."""
     if remove_case: text = text.lower()
-    return text.translate(str.maketrans('', '', ''.join(punctuations)))
+    return text.translate(str.maketrans('', '', ''.join(punctuations))).strip()
+
+def convert_to_full_tokens(subwords, punc_pred, case_pred):
+    i = 0
+    curr_word = ""
+    out_tokens, punc_preds, case_preds = [], [], []
+    while( i < len(subwords)):
+        curr_word += subwords[i]
+        while(i+1 < len(subwords) and subwords[i+1].startswith("##")):
+            i += 1
+            curr_word += subwords[i][2:]
+        out_tokens.append(curr_word)
+        punc_preds.append(punc_pred[i])
+        case_preds.append(case_pred[i])
+        curr_word = ""
+        i += 1
+    return out_tokens, punc_preds, case_preds
+
+
+def apply_labels_to_input(
+        sentences,
+        tokens,
+        puncs,
+        cases,
+        class_to_punc,
+        case_class
+    ):
+    i, j = 0, 0
+    labeled_sentences = []
+    curr_sentence = []
+    while(j < len(tokens)):
+        if len(curr_sentence) == len(sentences[i].split(' ')):
+            labeled_sentences.append(" ".join(curr_sentence))
+            curr_sentence = []
+            i += 1
+        else:
+            curr_punc, curr_case = class_to_punc[puncs[j]], case_class[cases[j]]
+            curr_token = tokens[j]+curr_punc
+            if curr_case == 'O':
+                pass # do nothing
+            elif curr_case == 'F':
+                curr_token = curr_token.capitalize()
+            elif curr_case == 'A':
+                curr_token = curr_token.upper()
+            curr_sentence.append(curr_token)
+            j += 1
+    return labeled_sentences
+
+
