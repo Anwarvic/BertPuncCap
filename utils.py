@@ -75,7 +75,7 @@ def apply_labels_to_input(
     i, j = 0, 0
     labeled_sentences = []
     curr_sentence = []
-    while(j < len(tokens)):
+    while(i < sentences and j < len(tokens)):
         if len(curr_sentence) == len(sentences[i].split(' ')):
             labeled_sentences.append(" ".join(curr_sentence))
             curr_sentence = []
