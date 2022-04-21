@@ -94,16 +94,18 @@ def preprocess_data(sentences, tokenizer, segment_size):
     X = insert_target(X, segment_size)
     return X
 
-def create_data_loader(X, batch_size):
+def create_data_loader(sentences, tokenizer, segment_size, batch_size):
     """
-    Converts samples (X) and labels (Y) into TensorDataset.
+    Converts sentences into TensorDataset.
 
     Parameters
     ----------
-    X: list(int)
-        A list of encoded samples.
-    Y: list(int)
-        A list of encoded labels.
+    sentences: list(str)
+            A list of sentences to be labeled.
+    tokenizer: transformers.PreTrainedTokenizer
+        The BERT's pre-trained tokenizer.
+    segment_size: int
+        The semgent size of the model.
     batch_size: int
         The batch size.
     
@@ -112,6 +114,12 @@ def create_data_loader(X, batch_size):
     data_loader: torch.utils.data.DataLoader
         A data loader for the data.
     """
+    X = preprocess_data(sentences, tokenizer, segment_size)
+    min_required_length = segment_size // 2
+    if len(X) < min_required_length:
+        raise ValueError("Input has very short context! " + 
+            f"The input sentences must be at least {min_required_length}" +
+            "-token long!")
     data_set = TensorDataset(torch.from_numpy(X).long())
     data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=False)
     return data_loader
