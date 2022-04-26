@@ -1,6 +1,5 @@
 import os
 import torch
-import numpy as np
 from torch import nn
 from tqdm import tqdm
 
@@ -108,7 +107,7 @@ class BertPuncCap(nn.Module):
         Returns
         -------
         out_sentences: list(str)
-            A list of sentences labels with punctuation & cases.
+            A list of sentences labeled with punctuation & cases.
         
         Note
         ----
@@ -117,14 +116,12 @@ class BertPuncCap(nn.Module):
         self.eval() # freeze the model
         # clean sentences from punctuations & capitalization
         puncs = list(self.hparams["punc_to_class"].keys()) #punctuations
-        # clean & tokenize sentences
-        sentences = [
-            " ".join(self.tokenizer.tokenize(clean(sent, puncs, True)))\
-                .replace(' ##', '')
-            for sent in sentences
-        ]
+        cleaned_sentences =  clean(sentences, puncs, remote_case=True)
+        # tokenize sentences
+        tokenized_sentences = tokenize(cleaned_sentences, self.tokenizer)
         # get labels
-        out_tokens, punc_preds, case_preds = self._get_labels(sentences)
+        out_tokens, punc_preds, case_preds = \
+                                    self._get_labels(tokenized_sentences)
         # Apply labels to input sentences
         out_sentences = apply_labels_to_input(
             sentences,
