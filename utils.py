@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 
 def parse_yaml(filepath):
+    """Parses a yaml file."""
     with open(filepath, "r") as stream:
         try:
             return yaml.safe_load(stream)
@@ -42,10 +43,38 @@ def load_checkpoint(checkpoint_path, device):
     return OrderedDict(new_stat_dict)
 
 
-def clean(text, punctuations, remove_case=True):
-    """remove punctuations and possibly case of a given text."""
-    if remove_case: text = text.lower()
-    return text.translate(str.maketrans('', '', ''.join(punctuations))).strip()
+def clean(sentences, punctuations, remove_case=True):
+    """remove punctuations and possibly case from a given list of sentences."""
+    cleaned_sentences = []
+    for text in sentences:
+        if remove_case: text = text.lower()
+        cleaned_text = text.translate(
+            str.maketrans('', '', ''.join(punctuations))
+        ).strip()
+        cleaned_sentences.append(cleaned_text)
+    return cleaned_sentences
+
+def tokenize(sentences, tokenizer):
+    """
+    Tokenize a list of sentences.
+
+    Parameters
+    ----------
+    sentences : list(str)
+        List of cleaned sentences (without punctuations and possibly cases) to
+        be tokenized.
+    tokenizer : transformers.PreTrainedTokenizer
+        A tokenizer object from the HuggingFace's `transformers` package.
+    
+    Returns
+    -------
+    list(str):
+        List of tokenized sentences. Tokens are separated by a white space.
+    """
+    return [
+        " ".join(tokenizer.tokenize(sent)).replace(' ##', '')
+        for sent in sentences
+    ]
 
 def convert_to_full_tokens(subwords, punc_pred, case_pred):
     i = 0
@@ -62,7 +91,6 @@ def convert_to_full_tokens(subwords, punc_pred, case_pred):
         curr_word = ""
         i += 1
     return out_tokens, punc_preds, case_preds
-
 
 def apply_labels_to_input(
         sentences,
@@ -93,9 +121,50 @@ def apply_labels_to_input(
             j += 1
     return labeled_sentences
 
+def get_case(word):
+    """
+    Detects the case of a given word.
+    Parameters
+    ----------
+    word: str
+        A string representing a word.
+    Returns
+    -------
+    str
+        A character representing the case of the word.
+    """
+    if word.isupper():
+        return 'A' #ALL_CAPS
+    elif word.istitle():
+        return 'F' #FIRST_CAP
+    else:
+        return 'O' #OTHER
 
-def extract_labels(sentences, tokenizer, punc_to_class, case_to_class):
+def extract_punc_case(sentences, tokenizer, punc_to_class, case_to_class):
+    tokens, punc_labels, case_labels = [], [], []
     # tokenize sentences
-    sentences = [
-        " ".join(tokenizer.tokenize(sent)) for sent in sentences
-    ]
+    tokenized_sentences = tokenize(sentences, tokenizer)
+    for sent in tokenized_sentences:
+        sent_tokens = sent.split(' ')
+        i = 0
+        while ( i < len(sent_tokens)):
+            if i == len(sent_tokens)-1:
+                curr_token = sent_tokens[i]
+                tokens.append(curr_token.lower())
+                punc_labels.append(0) # index for other 'O'
+                case_labels.append(case_to_class[get_case(curr_token)])
+                i += 1
+                continue
+            curr_token, next_token = sent_tokens[i], sent_tokens[i+1]
+            tokens.append(curr_token.lower())
+            if next_token in punc_to_class:
+                punc_labels.append(punc_to_class[next_token])
+                case_labels.append(case_to_class[get_case(curr_token)])
+                i += 2
+            else:
+                punc_labels.append(0) #index for other
+                case_labels.append(case_to_class[get_case(curr_token)])
+                i += 1
+    assert len(tokens) == len(punc_labels) == len(case_labels)
+    return tokens, punc_labels, case_labels
+
