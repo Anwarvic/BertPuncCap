@@ -82,7 +82,7 @@ def apply_labels_to_input(
             i += 1
         else:
             curr_punc, curr_case = class_to_punc[puncs[j]], case_class[cases[j]]
-            curr_token = tokens[j]+curr_punc
+            curr_token = tokens[j]+' '+curr_punc
             if curr_case == 'O':
                 pass # do nothing
             elif curr_case == 'F':
@@ -99,4 +99,3 @@ def extract_labels(sentences, tokenizer, punc_to_class, case_to_class):
     sentences = [
         " ".join(tokenizer.tokenize(sent)) for sent in sentences
     ]
-
