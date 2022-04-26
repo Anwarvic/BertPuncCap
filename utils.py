@@ -94,3 +94,9 @@ def apply_labels_to_input(
     return labeled_sentences
 
 
+def extract_labels(sentences, tokenizer, punc_to_class, case_to_class):
+    # tokenize sentences
+    sentences = [
+        " ".join(tokenizer.tokenize(sent)) for sent in sentences
+    ]
+
