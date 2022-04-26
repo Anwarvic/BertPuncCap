@@ -93,24 +93,25 @@ def convert_to_full_tokens(subwords, punc_pred, case_pred):
     return out_tokens, punc_preds, case_preds
 
 def apply_labels_to_input(
-        sentences,
-        tokens,
-        puncs,
-        cases,
+        tokens_count_per_sent,
+        total_tokens,
+        punc_preds,
+        cases_preds,
         class_to_punc,
         case_class
     ):
     i, j = 0, 0
     labeled_sentences = []
     curr_sentence = []
-    while(i < len(sentences) and j < len(tokens)):
-        if len(curr_sentence) == len(sentences[i].split(' ')):
+    while(i < len(tokens_count_per_sent) and j < len(total_tokens)):
+        if len(curr_sentence) == tokens_count_per_sent[i]:
             labeled_sentences.append(" ".join(curr_sentence))
             curr_sentence = []
             i += 1
         else:
-            curr_punc, curr_case = class_to_punc[puncs[j]], case_class[cases[j]]
-            curr_token = tokens[j]+' '+curr_punc if curr_punc else tokens[j]
+            curr_punc = class_to_punc[punc_preds[j]]
+            curr_case = case_class[cases_preds[j]]
+            curr_token = total_tokens[j]+' '+curr_punc if curr_punc else total_tokens[j]
             if curr_case == 'O':
                 pass # do nothing
             elif curr_case == 'F':
