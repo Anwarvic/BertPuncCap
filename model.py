@@ -116,7 +116,7 @@ class BertPuncCap(nn.Module):
         self.eval() # freeze the model
         # clean sentences from punctuations & capitalization
         puncs = list(self.hparams["punc_to_class"].keys()) #punctuations
-        cleaned_sentences =  clean(sentences, puncs, remote_case=True)
+        cleaned_sentences =  clean(sentences, puncs, remove_case=True)
         # tokenize sentences
         tokenized_sentences = tokenize(cleaned_sentences, self.tokenizer)
         # get labels
