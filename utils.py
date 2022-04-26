@@ -110,7 +110,7 @@ def apply_labels_to_input(
             i += 1
         else:
             curr_punc, curr_case = class_to_punc[puncs[j]], case_class[cases[j]]
-            curr_token = tokens[j]+' '+curr_punc
+            curr_token = tokens[j]+' '+curr_punc if curr_punc else tokens[j]
             if curr_case == 'O':
                 pass # do nothing
             elif curr_case == 'F':
