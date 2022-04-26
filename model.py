@@ -124,7 +124,7 @@ class BertPuncCap(nn.Module):
                                     self._get_labels(tokenized_sentences)
         # Apply labels to input sentences
         out_sentences = apply_labels_to_input(
-            sentences,
+            cleaned_sentences,
             out_tokens,
             punc_preds,
             case_preds,
