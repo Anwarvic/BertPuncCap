@@ -120,6 +120,7 @@ def apply_labels_to_input(
                 curr_token = curr_token.upper()
             curr_sentence.append(curr_token)
             j += 1
+    if curr_sentence: labeled_sentences.append(" ".join(curr_sentence))
     return labeled_sentences
 
 def get_case(word):
