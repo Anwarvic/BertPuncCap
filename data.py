@@ -8,7 +8,7 @@ from torch.utils.data import TensorDataset, DataLoader
 def load_file(filename):
     """reads text file where sentences are separated by newlines."""
     with open(filename, 'r', encoding='utf-8') as f:
-        data = f.readlines()
+        data = [line.strip() for line in f.readlines()]
     return data
 
 def encode_sentences(sentences, tokenizer):
