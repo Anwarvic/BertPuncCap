@@ -131,7 +131,7 @@ class BertPuncCap(nn.Module):
             self.hparams["class_to_punc"],
             self.hparams["class_to_case"]
         )
-        return out_sentences, punc_preds, case_preds
+        return out_sentences
 
 
 if __name__ == "__main__":
@@ -147,4 +147,11 @@ if __name__ == "__main__":
     bert_punc_cap = BertPuncCap(bert_model, bert_tokenizer, checkpoint_path)
 
     data_test = load_file('data/mTEDx/fr/test.fr')
-    out_sentences = bert_punc_cap.predict(data_test[:10])
+    # out_sentences = bert_punc_cap.predict(data_test)
+
+    extract_punc_case(
+        data_test,
+        bert_punc_cap.tokenizer,
+        bert_punc_cap.hparams["punc_to_class"],
+        bert_punc_cap.hparams["case_to_class"],
+    )
