@@ -131,7 +131,7 @@ class BertPuncCap(nn.Module):
             self.hparams["class_to_punc"],
             self.hparams["class_to_case"]
         )
-        return out_sentences
+        return out_sentences, punc_preds, case_preds
 
 
 if __name__ == "__main__":
