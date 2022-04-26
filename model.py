@@ -60,7 +60,7 @@ class BertPuncCap(nn.Module):
         Parameters
         ----------
         sentences: list(str)
-            A list of sentences to be labeled.
+            A list of clean and tokenized sentences that will be labeled.
         
         Returns
         -------
@@ -76,12 +76,6 @@ class BertPuncCap(nn.Module):
             task.
         """
         subwords, punc_pred, case_pred = [], [], []
-        puncs = list(self.hparams["punc_to_class"].keys()) #punctuations
-        sentences = [
-            " ".join(self.tokenizer.tokenize(clean(sent, puncs, True)))\
-                .replace(' ##', '')
-            for sent in sentences
-        ]
         data_loader = create_data_loader(sentences, self.tokenizer,
                                 self.hparams["segment_size"], batch_size=64)
         # Get predictions for sub-words
@@ -121,6 +115,14 @@ class BertPuncCap(nn.Module):
         Punctuations & capitalization are removed from the input sentences.
         """
         self.eval() # freeze the model
+        # clean sentences from punctuations & capitalization
+        puncs = list(self.hparams["punc_to_class"].keys()) #punctuations
+        # clean & tokenize sentences
+        sentences = [
+            " ".join(self.tokenizer.tokenize(clean(sent, puncs, True)))\
+                .replace(' ##', '')
+            for sent in sentences
+        ]
         # get labels
         out_tokens, punc_preds, case_preds = self._get_labels(sentences)
         # Apply labels to input sentences
