@@ -161,13 +161,15 @@ def extract_punc_case(sentences, tokenizer, punc_to_class, case_to_class):
                 curr_token, next_token = sent_tokens[i], sent_tokens[i+1]
                 tokens.append(curr_token.lower())
                 if next_token in punc_to_class:
-                    punc_labels.append(punc_to_class[next_token])
-                    case_labels.append(case_to_class[get_case(curr_token)])
-                    i += 2
+                    punc_label = punc_to_class[next_token]
+                    #ignore other consecutive punctuations if found
+                    while i+1 < len(sent_tokens) and sent_tokens[i+1] in punc_to_class:
+                        i += 1
                 else:
-                    punc_labels.append(0) #index for other
-                    case_labels.append(case_to_class[get_case(curr_token)])
+                    punc_label = 0 #label for other 'O
                     i += 1
+                punc_labels.append(punc_label)
+                case_labels.append(case_to_class[get_case(curr_token)])
     assert len(tokens) == len(punc_labels) == len(case_labels)
     return tokens, punc_labels, case_labels
 
