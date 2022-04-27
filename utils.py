@@ -50,11 +50,12 @@ def clean(sentences, punctuations, remove_case=True):
     cleaned_sentences = []
     for text in sentences:
         if remove_case: text = text.lower()
-        cleaned_text = re.sub(punctuations, '', text) # remove punctuations
-        cleaned_text = re.sub('\s+', ' ', cleaned_text) # remove multiple spaces
-        # cleaned_text = text.translate(
-        #     str.maketrans(' ', ' ', punctuations)
-        # ).strip()
+        # remove punctuations
+        cleaned_text = text.translate(
+            str.maketrans(punctuations, ' '*len(punctuations))
+        ).strip()
+        # remove multiple spaces
+        cleaned_text = re.sub('\s+', ' ', cleaned_text)
         cleaned_sentences.append(cleaned_text)
     return cleaned_sentences
 
