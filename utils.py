@@ -1,3 +1,4 @@
+import re
 import os
 import yaml
 import torch
@@ -45,12 +46,15 @@ def load_checkpoint(checkpoint_path, device):
 
 def clean(sentences, punctuations, remove_case=True):
     """remove punctuations and possibly case from a given list of sentences."""
+    punctuations = ''.join(punctuations)
     cleaned_sentences = []
     for text in sentences:
         if remove_case: text = text.lower()
-        cleaned_text = text.translate(
-            str.maketrans('', '', ''.join(punctuations))
-        ).strip()
+        cleaned_text = re.sub(punctuations, '', text) # remove punctuations
+        cleaned_text = re.sub('\s+', ' ', cleaned_text) # remove multiple spaces
+        # cleaned_text = text.translate(
+        #     str.maketrans(' ', ' ', punctuations)
+        # ).strip()
         cleaned_sentences.append(cleaned_text)
     return cleaned_sentences
 
