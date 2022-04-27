@@ -162,8 +162,9 @@ def extract_punc_case(sentences, tokenizer, punc_to_class, case_to_class):
                 tokens.append(curr_token.lower())
                 if next_token in punc_to_class:
                     punc_label = punc_to_class[next_token]
+                    i += 1
                     #ignore other consecutive punctuations if found
-                    while i+1 < len(sent_tokens) and sent_tokens[i+1] in punc_to_class:
+                    while i < len(sent_tokens) and sent_tokens[i] in punc_to_class:
                         i += 1
                 else:
                     punc_label = 0 #label for other 'O
