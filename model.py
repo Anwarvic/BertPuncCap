@@ -51,6 +51,28 @@ class BertPuncCap(nn.Module):
         punc_logits = self.punc_fc(self.dropout(self.punc_bn(x)))
         case_logits = self.case_fc(self.dropout(self.case_bn(x)))
         return punc_logits, case_logits
+    
+    def _clean_and_tokenize(self, sentences):
+        """
+        Cleans and tokenizes the given sentences. By cleaning, we mean
+        removing all punctuation and capitalization.
+
+        Parameters
+        ----------
+        sentences: list(str)
+            A list of sentences to be cleaned and tokenized.
+        
+        Returns
+        -------
+        out_sentences: list(str)
+            A list of cleaned and tokenized sentences.
+        """
+        # clean sentences from punctuations & capitalization
+        puncs = list(self.hparams["punc_to_class"].keys()) #punctuations
+        cleaned_sentences =  clean(sentences, puncs, remove_case=True)
+        # tokenize sentences
+        tokenized_sentences = tokenize(cleaned_sentences, self.tokenizer)
+        return tokenized_sentences
        
     def _get_labels(self, sentences):
         """
@@ -84,8 +106,7 @@ class BertPuncCap(nn.Module):
                 subword_ids = input_batch[:, (self.hparams["segment_size"]-1)//2 - 1].flatten()
                 subwords += self.tokenizer.convert_ids_to_tokens(subword_ids)
                 # move data & model to device
-                input_batch = input_batch.to(self.device)
-                self = self.to(self.device)
+                self, input_batch = self.to(self.device), input_batch.to(self.device)
                 punc_outputs, case_outputs = self.forward(input_batch)
                 punc_pred += list(punc_outputs.argmax(dim=1).cpu().data.numpy().flatten())
                 case_pred += list(case_outputs.argmax(dim=1).cpu().data.numpy().flatten())
@@ -114,11 +135,8 @@ class BertPuncCap(nn.Module):
         Punctuations & capitalization are removed from the input sentences.
         """
         self.eval() # freeze the model
-        # clean sentences from punctuations & capitalization
-        puncs = list(self.hparams["punc_to_class"].keys()) #punctuations
-        cleaned_sentences =  clean(sentences, puncs, remove_case=True)
-        # tokenize sentences
-        tokenized_sentences = tokenize(cleaned_sentences, self.tokenizer)
+        # clean and tokenize sentences
+        tokenized_sentences = self._clean_and_tokenize(sentences)
         # get labels
         out_tokens, punc_preds, case_preds = \
                                     self._get_labels(tokenized_sentences)
@@ -147,11 +165,11 @@ if __name__ == "__main__":
     bert_punc_cap = BertPuncCap(bert_model, bert_tokenizer, checkpoint_path)
 
     data_test = load_file('data/mTEDx/fr/test.fr')
-    # out_sentences = bert_punc_cap.predict(data_test)
+    out_sentences = bert_punc_cap.predict(data_test[:10])
 
-    extract_punc_case(
-        data_test,
-        bert_punc_cap.tokenizer,
-        bert_punc_cap.hparams["punc_to_class"],
-        bert_punc_cap.hparams["case_to_class"],
-    )
+    # extract_punc_case(
+    #     data_test,
+    #     bert_punc_cap.tokenizer,
+    #     bert_punc_cap.hparams["punc_to_class"],
+    #     bert_punc_cap.hparams["case_to_class"],
+    # )
