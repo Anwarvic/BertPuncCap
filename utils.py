@@ -9,13 +9,8 @@ from collections import OrderedDict
 def parse_yaml(filepath):
     """Parses a yaml file."""
     with open(filepath, "r") as stream:
-        try:
-            return yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
-            raise FileExistsError(
-                "Can't find the configuration file: config.yaml"
-            )
-
+        return yaml.safe_load(stream)
+        
 def load_checkpoint(checkpoint_path, device):
     stat_dict = None
     if os.path.exists(os.path.join(checkpoint_path, "best_model")):
