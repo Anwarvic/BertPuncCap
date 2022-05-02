@@ -5,7 +5,7 @@ capitalization from a given text. In other words, given a text with no
 punctuations and no capitalization, this model is able to restore the needed
 punctuations and capitalization to make the text human-readable.
 
-BertPuncCap is PyTorch model built on top of Google's
+BertPuncCap is PyTorch model built on top of a pre-trained Google's
 [BERT](https://arxiv.org/pdf/1810.04805) model by creating two linear layers
 that perform the two tasks simultaneously. One layer is responsible for the 
 **re-punctuation** task and the other is responsible for the **re-punctuation**
@@ -15,6 +15,17 @@ task as shown in the following figure:
 <div align="center">
     <img src="https://i.ibb.co/B6gfKz7/Bert-Punc-Cap.png" width=500px>
 </div>
+
+The method of how BertPuncCap works can be summarized in the following steps:
+
+- BertPuncCap takes an input that consists of `segment_size` tokens. If the
+input is shorter than `segment_size`, then we are going to pad it with the
+edges. The `segment_size` is a hyper-parameter that you can control.
+- Then, the pre-trained BERT will return its representations for the input
+tokens. The shape of the output should be `segment_size x model_dim`.
+- These representations will be sent to the two linear layers for
+classification. One layer should classify the punctuation after each token
+while the  other should classify the case.
 
 
 > **Note:**
