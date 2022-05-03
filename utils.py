@@ -3,6 +3,7 @@ import os
 import yaml
 import torch
 import warnings
+import numpy as np
 from collections import OrderedDict
 
 
@@ -174,3 +175,11 @@ def extract_punc_case(sentences, tokenizer, punc_to_class, case_to_class):
     assert len(tokens) == len(punc_labels) == len(case_labels)
     return tokens, punc_labels, case_labels
 
+# helpful function
+def sum_params(model):
+    """Sums the weights/parameters of a given model."""
+    s = 0
+    for p in model.parameters():
+        n = p.cpu().data.numpy()
+        s += np.sum(n)
+    return s
