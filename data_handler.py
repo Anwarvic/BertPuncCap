@@ -127,6 +127,28 @@ class DataHandler:
         return out_tokens, out_punc_labels, out_case_labels
     
     def _flatten(self, tokens, punc_labels, case_labels):
+        """
+        Converts the nested list of tokens to a list of tokens. Same happens
+        for punctuations & cases.
+
+        Parameters
+        ----------
+        tokens: list(list(str))
+            A nested list of tokens.
+        punc_labels: list(list(int))
+            A nested list of punctuation classes.
+        case_labels: list(list(int))
+            A nested list of cases classes.
+        
+        Returns
+        ------
+        out_tokens: list(str)
+            A flattened list of the same input tokens.
+        out_punc_labels: list(int) 
+            A flattened list of the same input punctuation classes.
+        out_case_labels:
+            A flattened list of the same input case classes.
+        """
         out_tokens, out_punc_labels, out_case_labels = [], [], []
         for sent_tokens, sent_puncs, sent_cases in zip(tokens, punc_labels, case_labels):
             out_tokens.extend(sent_tokens)
