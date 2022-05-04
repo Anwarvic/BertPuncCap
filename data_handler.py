@@ -52,7 +52,7 @@ class DataHandler:
             " ".join(self.tokenizer.tokenize(sent)).replace(' ##', '')
             for sent in sentences
         ]
-        for sent in sentences:
+        for sent in tqdm(sentences, desc="Processing"):
             tmp_tokens, tmp_punc_labels, tmp_case_labels = [], [], []
             sent_tokens = sent.split(' ') #tokenize using white-space
             i = 0
@@ -175,7 +175,7 @@ class DataHandler:
         -------
         out_samples: list(list(int))
             A nested list of samples/examples for the model to be trained on.
-            The shape of list should be (num_tokens x segment_size)
+            The shape of list should be (num_sub-tokens x segment_size)
         """
         # Make sure there are enough tokens
         min_required_length = self.segment_size // 2
@@ -283,6 +283,5 @@ if __name__ == "__main__":
             params["punc_to_class"], params["case_to_class"])
     
     # Should be no AssertionError
-    tokens, punc_labels, case_labels = \
-        data_handler.create_train_dataloader(sentences, 64)
-    
+    data_handler.create_train_dataloader(sentences, 64)
+
