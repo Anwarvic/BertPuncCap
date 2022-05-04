@@ -158,7 +158,7 @@ class DataHandler:
             #zero at the middle to mark the targeted token
             segment.insert((self.segment_size-1)//2, 0)
             out_samples.append(segment)
-        return np.array(out_samples)
+        return out_samples
     
     def create_train_dataloader(self, sentences, batch_size, shuffle=True):
         """
@@ -192,9 +192,9 @@ class DataHandler:
         assert len(samples) == len(punc_labels) == len(case_labels)
         # create data loader
         data_set = TensorDataset(
-            torch.from_numpy(samples).long(),
-            torch.from_numpy(punc_labels).long(),
-            torch.from_numpy(case_labels).long(),
+            torch.tensor(samples).long(),
+            torch.tensor(punc_labels).long(),
+            torch.tensor(case_labels).long(),
         )
         data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=shuffle)
         return data_loader
@@ -225,7 +225,7 @@ class DataHandler:
         # create samples
         samples = self._create_samples(subtokens)
         # create data loader without any labels
-        data_set = TensorDataset(torch.from_numpy(samples).long())
+        data_set = TensorDataset(torch.tensor(samples).long())
         data_loader = DataLoader(data_set, batch_size=batch_size)
         return data_loader
 
