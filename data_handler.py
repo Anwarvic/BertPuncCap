@@ -8,13 +8,7 @@ from utils import get_case
 
 class DataHandler:
 
-    def __init__(self,
-            BERT_tokenizer,
-            segment_size,
-            punctuations,
-            punc_to_class,
-            case_to_class,
-        ):
+    def __init__(self, tokenizer, segment_size, punc_to_class, case_to_class):
         """
         Initializes the DataHandler
 
@@ -29,9 +23,8 @@ class DataHandler:
         case_to_class: dict
             A dictionary mapping a case token to the class index.
         """
-        self.tokenizer = BERT_tokenizer
+        self.tokenizer = tokenizer
         self.segment_size = segment_size
-        self.punctuations = punctuations
         self.punc_to_class = punc_to_class
         self.case_to_class = case_to_class
     
@@ -60,19 +53,20 @@ class DataHandler:
             for sent in sentences
         ]
         for sent in sentences:
+            tmp_tokens, tmp_punc_labels, tmp_case_labels = [], [], []
             sent_tokens = sent.split(' ') #tokenize using white-space
             i = 0
             while ( i < len(sent_tokens)):
                 if i == len(sent_tokens)-1:
                     curr_token = sent_tokens[i]
-                    tokens.append(curr_token.lower())
-                    punc_labels.append(0) # index for other 'O'
-                    case_labels.append(self.case_to_class[get_case(curr_token)])
+                    tmp_tokens.append(curr_token.lower())
+                    tmp_punc_labels.append(0) # index for other 'O'
+                    tmp_case_labels.append(self.case_to_class[get_case(curr_token)])
                     i += 1
                     continue
                 else:
                     curr_token, next_token = sent_tokens[i], sent_tokens[i+1]
-                    tokens.append(curr_token.lower())
+                    tmp_tokens.append(curr_token.lower())
                     if next_token in self.punc_to_class:
                         punc_label = self.punc_to_class[next_token]
                         i += 1
@@ -82,40 +76,62 @@ class DataHandler:
                     else:
                         punc_label = 0 #label for other 'O
                         i += 1
-                    punc_labels.append(punc_label)
-                    case_labels.append(self.case_to_class[get_case(curr_token)])
+                    tmp_punc_labels.append(punc_label)
+                    tmp_case_labels.append(self.case_to_class[get_case(curr_token)])
+            assert len(tmp_tokens) == len(tmp_punc_labels) == len(tmp_case_labels)
+            tokens.append(tmp_tokens)
+            punc_labels.append(tmp_punc_labels)
+            case_labels.append(tmp_case_labels)
         assert len(tokens) == len(punc_labels) == len(case_labels)
         return tokens, punc_labels, case_labels
     
     def _expand(self, tokens, punc_labels, case_labels):
         """
         Expands the tokens & labels to the sub-token level. Remember that BERT
-        tokenizers uses sub-word tokenization.
+        tokenizers uses sub-word tokenization and one word can be divided into
+        multiple 
 
         Parameters
         ----------
-        tokens: list(str)
-            A list of tokens.
-        punc_labels: list(int)
-            A list of punctuation classes, one for each token.
-        case_labels: list(int)
-            A list of case classes, one for each token.
+        tokens: list(list(str))
+            A list of a list of tokens.
+        punc_labels: list(list(int))
+            A list of a list of punctuation classes, one for each token.
+        case_labels: list(list(int))
+            A list of a list of case classes, one for each token.
         
         Returns:
-        out_tokens: list(str)
-            A list of expanded tokens.
-        out_punc_labels: list(int)
-            A list of expanded punctuation classes, one for each sub-token.
-        out_case_labels: list(int)
-            A list of expanded case classes, one for each sub-token.
+        out_tokens: list(list(str))
+            A list of a list of expanded tokens.
+        out_punc_labels: list(list(int))
+            A list of a list of expanded punctuation classes, one for each
+            sub-token.
+        out_case_labels: list(list(int))
+            A list of a list of expanded case classes, one for each sub-token.
         """
         out_tokens, out_punc_labels, out_case_labels = [], [], []
-        for token, punc, case in zip(tokens, punc_labels, case_labels):
-            subwords = self.tokenizer.tokenize(token)
-            out_tokens += subwords
-            #expand labels with other index (0)
-            out_punc_labels += [0]*(len(subwords)-1) + [punc]
-            out_case_labels += [0]*(len(subwords)-1) + [case]
+        for i in range(len(tokens)):
+            tmp_tokens, tmp_punc_labels, tmp_case_labels = [], [], []
+            for token, punc, case in zip(tokens[i], punc_labels[i], case_labels[i]):
+                subwords = self.tokenizer.tokenize(token)
+                tmp_tokens += subwords
+                #expand labels with other index (0)
+                tmp_punc_labels += [0]*(len(subwords)-1) + [punc]
+                tmp_case_labels += [0]*(len(subwords)-1) + [case]
+            assert len(tmp_tokens) == len(tmp_punc_labels) == len(tmp_case_labels)
+            # append results to bigger list
+            out_tokens.append(tmp_tokens)
+            out_punc_labels.append(tmp_punc_labels)
+            out_case_labels.append(tmp_case_labels)
+            assert len(out_tokens) == len(out_punc_labels) == len(out_case_labels)
+        return out_tokens, out_punc_labels, out_case_labels
+    
+    def _flatten(self, tokens, punc_labels, case_labels):
+        out_tokens, out_punc_labels, out_case_labels = [], [], []
+        for sent_tokens, sent_puncs, sent_cases in zip(tokens, punc_labels, case_labels):
+            out_tokens.extend(sent_tokens)
+            out_punc_labels.extend(sent_puncs)
+            out_case_labels.extend(sent_cases)
         assert len(out_tokens) == len(out_punc_labels) == len(out_case_labels)
         return out_tokens, out_punc_labels, out_case_labels
     
@@ -128,7 +144,7 @@ class DataHandler:
                 "-token long!")
         # convert subtokens in ids
         sub_tokens_ids = [
-            self.tokenzier.convert_tokens_to_ids(subtoken)
+            self.tokenizer.convert_tokens_to_ids(subtoken)
             for subtoken in sub_tokens
         ]
         #pad the start & end of x
@@ -168,6 +184,9 @@ class DataHandler:
         # expand tokens & labels to the sub-word level
         subtokens, punc_labels, case_labels = self._expand(tokens,
                                                 punc_labels, case_labels)
+        # flatten data
+        subtokens, punc_labels, case_labels = self._flatten(subtokens,
+                                                    punc_labels, case_labels)
         # create samples
         samples = self._create_samples(subtokens)
         assert len(samples) == len(punc_labels) == len(case_labels)
@@ -179,7 +198,7 @@ class DataHandler:
         )
         data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=shuffle)
         return data_loader
-      
+    
     def create_test_dataloader(self, sentences, batch_size):
         """
         Loads the data as a torch.DataLoader for testing.
@@ -196,13 +215,33 @@ class DataHandler:
         data_loader: torch.utils.data.DataLoader
             A data loader of the test data.
         """
-        # extract tokens & labels
+       # extract tokens & labels
         tokens, punc_labels, case_labels = self.extract_tokens_labels(sentences)
         # expand tokens & labels to the sub-word level
-        subtokens, _, _ = self._expand(tokens, punc_labels, case_labels)
+        subtokens, punc_labels, case_labels = self._expand(tokens,
+                                                punc_labels, case_labels)
+        # flatten data
+        subtokens, _, _ = self._flatten(subtokens, punc_labels, case_labels)
         # create samples
         samples = self._create_samples(subtokens)
         # create data loader without any labels
         data_set = TensorDataset(torch.from_numpy(samples).long())
         data_loader = DataLoader(data_set, batch_size=batch_size)
         return data_loader
+
+
+if __name__ == "__main__":
+    from transformers import BertTokenizer
+    from utils import load_file, parse_yaml
+
+    sentences = load_file("data/mTEDx/fr/test.fr")
+    params = parse_yaml("models/mbert_base_cased/config.yaml")
+    BERT_name = "bert-base-multilingual-cased"
+    bert_tokenizer = BertTokenizer.from_pretrained(BERT_name)
+    data_handler = DataHandler(bert_tokenizer, params["segment_size"],
+            params["punc_to_class"], params["case_to_class"])
+    
+    # Should be no AssertionError
+    tokens, punc_labels, case_labels = \
+        data_handler.create_train_dataloader(sentences, 64)
+    
