@@ -158,6 +158,25 @@ class DataHandler:
         return out_tokens, out_punc_labels, out_case_labels
     
     def _create_samples(self, sub_tokens):
+        """
+        Converts tokens to samples; by sample I mean a complete example with
+        `segment_size` context that the model can be trained on.
+        Every example has a sub-token in the middle with `segment_size/2` words
+        on the left and segment_size/2 words on the right.
+        Also sub-tokens will be represented by its index in the `tokenizer`
+        vocabulary.
+
+        Parameters
+        ----------
+        sub_tokens: list(str)
+            A list of sub-tokens.
+        
+        Returns
+        -------
+        out_samples: list(list(int))
+            A nested list of samples/examples for the model to be trained on.
+            The shape of list should be (num_tokens x segment_size)
+        """
         # Make sure there are enough tokens
         min_required_length = self.segment_size // 2
         if len(sub_tokens) < min_required_length:
@@ -214,9 +233,9 @@ class DataHandler:
         assert len(samples) == len(punc_labels) == len(case_labels)
         # create data loader
         data_set = TensorDataset(
-            torch.tensor(samples).long(),
-            torch.tensor(punc_labels).long(),
-            torch.tensor(case_labels).long(),
+            torch.from_numpy(np.array(samples)).long(),
+            torch.from_numpy(np.array(punc_labels)).long(),
+            torch.from_numpy(np.array(case_labels)).long(),
         )
         data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=shuffle)
         return data_loader
@@ -247,7 +266,7 @@ class DataHandler:
         # create samples
         samples = self._create_samples(subtokens)
         # create data loader without any labels
-        data_set = TensorDataset(torch.tensor(samples).long())
+        data_set = TensorDataset(torch.from_numpy(np.array(samples)).long())
         data_loader = DataLoader(data_set, batch_size=batch_size)
         return data_loader
 
