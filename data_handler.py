@@ -117,7 +117,9 @@ class DataHandler:
         for i in range(len(tokens)):
             tmp_tokens, tmp_punc_labels, tmp_case_labels = [], [], []
             for token, punc, case in zip(tokens[i], punc_labels[i], case_labels[i]):
-                subwords = self.tokenizer.tokenize(token)
+                # don't tokenize [unk] token
+                subwords = self.tokenizer.tokenize(token) \
+                    if token != self.tokenizer.unk_token.lower() else [token]
                 tmp_tokens += subwords
                 #expand labels with other index (0)
                 tmp_punc_labels += [0]*(len(subwords)-1) + [punc]
