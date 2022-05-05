@@ -137,9 +137,6 @@ class BertPuncCap(nn.Module):
         #TODO: FIND A BETTER WAY TO CLEAN & PROCESS DATA.
         cleaned_tokens, _, _ = \
             self._data_handler._extract_tokens_labels(sentences, "Cleaning")
-        cleaned_sentences = [
-            " ".join(sent_tokens) for sent_tokens in cleaned_tokens
-        ]
         # get labels
         out_tokens, punc_preds, case_preds = \
                                 self._get_labels(sentences, batch_size)
