@@ -6,6 +6,11 @@ import warnings
 import numpy as np
 from collections import OrderedDict
 
+def load_file(filename):
+    """reads text file where sentences are separated by newlines."""
+    with open(filename, 'r', encoding='utf-8') as f:
+        data = [line.strip() for line in f.readlines()]
+    return data
 
 def parse_yaml(filepath):
     """Parses a yaml file."""
@@ -38,44 +43,6 @@ def load_checkpoint(checkpoint_path, device):
                 continue
             new_stat_dict[new_key] = stat_dict[old_key]
     return OrderedDict(new_stat_dict)
-
-
-def clean(sentences, punctuations, remove_case=True):
-    """remove punctuations and possibly case from a given list of sentences."""
-    punctuations = ''.join(punctuations)
-    cleaned_sentences = []
-    for text in sentences:
-        if remove_case: text = text.lower()
-        # remove punctuations
-        cleaned_text = text.translate(
-            str.maketrans(punctuations, ' '*len(punctuations))
-        ).strip()
-        # remove multiple spaces
-        cleaned_text = re.sub('\s+', ' ', cleaned_text)
-        cleaned_sentences.append(cleaned_text)
-    return cleaned_sentences
-
-def tokenize(sentences, tokenizer):
-    """
-    Tokenize a list of sentences.
-
-    Parameters
-    ----------
-    sentences : list(str)
-        List of cleaned sentences (without punctuations and possibly cases) to
-        be tokenized.
-    tokenizer : transformers.PreTrainedTokenizer
-        A tokenizer object from the HuggingFace's `transformers` package.
-    
-    Returns
-    -------
-    list(str):
-        List of tokenized sentences. Tokens are separated by a white space.
-    """
-    return [
-        " ".join(tokenizer.tokenize(sent)).replace(' ##', '')
-        for sent in sentences
-    ]
 
 def convert_to_full_tokens(subwords, punc_pred, case_pred):
     i = 0
@@ -143,39 +110,6 @@ def get_case(word):
     else:
         return 'O' #OTHER
 
-def extract_punc_case(sentences, tokenizer, punc_to_class, case_to_class):
-    tokens, punc_labels, case_labels = [], [], []
-    # tokenize sentences
-    tokenized_sentences = tokenize(sentences, tokenizer)
-    for sent in tokenized_sentences:
-        sent_tokens = sent.split(' ')
-        i = 0
-        while ( i < len(sent_tokens)):
-            if i == len(sent_tokens)-1:
-                curr_token = sent_tokens[i]
-                tokens.append(curr_token.lower())
-                punc_labels.append(0) # index for other 'O'
-                case_labels.append(case_to_class[get_case(curr_token)])
-                i += 1
-                continue
-            else:
-                curr_token, next_token = sent_tokens[i], sent_tokens[i+1]
-                tokens.append(curr_token.lower())
-                if next_token in punc_to_class:
-                    punc_label = punc_to_class[next_token]
-                    i += 1
-                    #ignore other consecutive punctuations if found
-                    while i < len(sent_tokens) and sent_tokens[i] in punc_to_class:
-                        i += 1
-                else:
-                    punc_label = 0 #label for other 'O
-                    i += 1
-                punc_labels.append(punc_label)
-                case_labels.append(case_to_class[get_case(curr_token)])
-    assert len(tokens) == len(punc_labels) == len(case_labels)
-    return tokens, punc_labels, case_labels
-
-# helpful function
 def sum_params(model):
     """Sums the weights/parameters of a given model."""
     s = 0
