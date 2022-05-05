@@ -142,7 +142,7 @@ class BertPuncCap(nn.Module):
         ]
         # get labels
         out_tokens, punc_preds, case_preds = \
-                                self._get_labels(cleaned_sentences, batch_size)
+                                self._get_labels(sentences, batch_size)
         # Apply labels to input sentences
         out_sentences = apply_labels_to_input(
             [len(sent_tokens) for sent_tokens in cleaned_tokens],
@@ -168,4 +168,6 @@ if __name__ == "__main__":
     bert_punc_cap = BertPuncCap(bert_model, bert_tokenizer, checkpoint_path)
 
     data_test = load_file('data/mTEDx/fr/test.fr')
-    out_sentences = bert_punc_cap.predict(data_test[:10])
+    print(data_test[54:55])
+    out_sentences = bert_punc_cap.predict(data_test[54:55])
+    print(out_sentences)
