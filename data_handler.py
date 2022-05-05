@@ -80,11 +80,13 @@ class DataHandler:
                         i += 1
                     tmp_punc_labels.append(punc_label)
                     tmp_case_labels.append(self.case_to_class[get_case(curr_token)])
-            assert len(tmp_tokens) == len(tmp_punc_labels) == len(tmp_case_labels)
+            assert len(tmp_tokens) == len(tmp_punc_labels) == len(tmp_case_labels), \
+                f"Size mismatch when {desc}"
             tokens.append(tmp_tokens)
             punc_labels.append(tmp_punc_labels)
             case_labels.append(tmp_case_labels)
-        assert len(tokens) == len(punc_labels) == len(case_labels)
+        assert len(tokens) == len(punc_labels) == len(case_labels), \
+            f"Size mismatch when {desc}"
         return tokens, punc_labels, case_labels
     
     def _expand(self, tokens, punc_labels, case_labels):
@@ -120,12 +122,14 @@ class DataHandler:
                 #expand labels with other index (0)
                 tmp_punc_labels += [0]*(len(subwords)-1) + [punc]
                 tmp_case_labels += [0]*(len(subwords)-1) + [case]
-            assert len(tmp_tokens) == len(tmp_punc_labels) == len(tmp_case_labels)
+            assert len(tmp_tokens) == len(tmp_punc_labels) == len(tmp_case_labels), \
+                "Size mismatch when expanding"
             # append results to bigger list
             out_tokens.append(tmp_tokens)
             out_punc_labels.append(tmp_punc_labels)
             out_case_labels.append(tmp_case_labels)
-            assert len(out_tokens) == len(out_punc_labels) == len(out_case_labels)
+            assert len(out_tokens) == len(out_punc_labels) == len(out_case_labels), \
+                "Size mismatch when expanding"
         return out_tokens, out_punc_labels, out_case_labels
     
     def _flatten(self, tokens, punc_labels, case_labels):
@@ -156,7 +160,8 @@ class DataHandler:
             out_tokens.extend(sent_tokens)
             out_punc_labels.extend(sent_puncs)
             out_case_labels.extend(sent_cases)
-        assert len(out_tokens) == len(out_punc_labels) == len(out_case_labels)
+        assert len(out_tokens) == len(out_punc_labels) == len(out_case_labels), \
+            "Size mismatch when flattening"
         return out_tokens, out_punc_labels, out_case_labels
     
     def _create_samples(self, sub_tokens):
@@ -230,7 +235,8 @@ class DataHandler:
                                                     punc_labels, case_labels)
         # create samples
         samples = self._create_samples(subtokens)
-        assert len(samples) == len(punc_labels) == len(case_labels)
+        assert len(samples) == len(punc_labels) == len(case_labels), \
+            "Size mismatch when preprocessing"
         return samples, punc_labels, case_labels
 
     def create_train_dataloader(self, sentences, batch_size, shuffle=True):
