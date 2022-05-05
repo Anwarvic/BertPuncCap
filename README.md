@@ -71,7 +71,7 @@ You can download the pre-trained models from the following table:
             <th>BertPuncCap</th>
             <th>Training Data</th>
             <th>BERT</th>
-            <th>Supporting Languages</th>
+            <th>Supported Languages</th>
         </tr>
     </thead>
     <tr>
@@ -112,4 +112,4 @@ You can download the pre-trained models from the following table:
 ## Train
 
 
-### Hypter-parameters
+### Hyper-parameters
