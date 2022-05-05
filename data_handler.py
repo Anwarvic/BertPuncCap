@@ -28,7 +28,7 @@ class DataHandler:
         self.punc_to_class = punc_to_class
         self.case_to_class = case_to_class
     
-    def extract_tokens_labels(self, sentences):
+    def _extract_tokens_labels(self, sentences):
         """
         Extracts punctuations & cases of every token of the given sentences.
 
@@ -175,7 +175,7 @@ class DataHandler:
         -------
         out_samples: list(list(int))
             A nested list of samples/examples for the model to be trained on.
-            The shape of list should be (num_sub-tokens x segment_size)
+            The shape of list should be (num_sub-tokens x segment_size).
         """
         # Make sure there are enough tokens
         min_required_length = self.segment_size // 2
@@ -201,6 +201,36 @@ class DataHandler:
             out_samples.append(segment)
         return out_samples
     
+    def preprocess(self, sentences):
+        """
+        Preprocesses the input data and convert them into samples that the
+        model can train on.
+
+        Parameters
+        ----------
+        sentences: list(str)
+            A list of sentences to be preprocessed.
+        
+        Returns
+        -------
+        samples: list(list(int))
+            A nested list of samples/examples for the model to be trained on.
+            The shape of list should be (num_sub-tokens x segment_size).
+        """
+        # extract tokens & labels
+        tokens, punc_labels, case_labels = \
+                                    self._extract_tokens_labels(sentences)
+        # expand tokens & labels to the sub-word level
+        subtokens, punc_labels, case_labels = self._expand(tokens,
+                                                punc_labels, case_labels)
+        # flatten data
+        subtokens, punc_labels, case_labels = self._flatten(subtokens,
+                                                    punc_labels, case_labels)
+        # create samples
+        samples = self._create_samples(subtokens)
+        assert len(samples) == len(punc_labels) == len(case_labels)
+        return samples, punc_labels, case_labels
+
     def create_train_dataloader(self, sentences, batch_size, shuffle=True):
         """
         Loads the data as a torch.DataLoader for training or validation.
@@ -220,16 +250,7 @@ class DataHandler:
         data_loader: torch.utils.data.DataLoader
             A data loader of the train/valid data.
         """
-        # extract tokens & labels
-        tokens, punc_labels, case_labels = self.extract_tokens_labels(sentences)
-        # expand tokens & labels to the sub-word level
-        subtokens, punc_labels, case_labels = self._expand(tokens,
-                                                punc_labels, case_labels)
-        # flatten data
-        subtokens, punc_labels, case_labels = self._flatten(subtokens,
-                                                    punc_labels, case_labels)
-        # create samples
-        samples = self._create_samples(subtokens)
+        samples, punc_labels, case_labels = self.preprocess(sentences)
         assert len(samples) == len(punc_labels) == len(case_labels)
         # create data loader
         data_set = TensorDataset(
@@ -256,15 +277,7 @@ class DataHandler:
         data_loader: torch.utils.data.DataLoader
             A data loader of the test data.
         """
-       # extract tokens & labels
-        tokens, punc_labels, case_labels = self.extract_tokens_labels(sentences)
-        # expand tokens & labels to the sub-word level
-        subtokens, punc_labels, case_labels = self._expand(tokens,
-                                                punc_labels, case_labels)
-        # flatten data
-        subtokens, _, _ = self._flatten(subtokens, punc_labels, case_labels)
-        # create samples
-        samples = self._create_samples(subtokens)
+        samples, _, _ = self.preprocess(sentences)
         # create data loader without any labels
         data_set = TensorDataset(torch.from_numpy(np.array(samples)).long())
         data_loader = DataLoader(data_set, batch_size=batch_size)
