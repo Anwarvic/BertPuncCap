@@ -28,7 +28,7 @@ class DataHandler:
         self.punc_to_class = punc_to_class
         self.case_to_class = case_to_class
     
-    def _extract_tokens_labels(self, sentences):
+    def _extract_tokens_labels(self, sentences, desc="Extracting Labels"):
         """
         Extracts punctuations & cases of every token of the given sentences.
 
@@ -36,6 +36,9 @@ class DataHandler:
         ----------
         sentences: list(str)
             A list of sentences to be preprocessed.
+        desc: str
+            A text describing the task. This method can be used either for
+            extracting labels or cleaning (removing punctuation & cases).
         
         Returns
         -------
@@ -52,7 +55,7 @@ class DataHandler:
             " ".join(self.tokenizer.tokenize(sent)).replace(' ##', '')
             for sent in sentences
         ]
-        for sent in tqdm(sentences, desc="Processing"):
+        for sent in tqdm(sentences, desc=desc):
             tmp_tokens, tmp_punc_labels, tmp_case_labels = [], [], []
             sent_tokens = sent.split(' ') #tokenize using white-space
             i = 0
