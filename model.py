@@ -104,8 +104,12 @@ class BertPuncCap(nn.Module):
                 input_batch  = input_batch.to(self.device)
                 punc_outputs, case_outputs = self.forward(input_batch)
                 # get the class that has the highest probability
-                punc_pred += list(punc_outputs.argmax(dim=1).cpu().data.numpy().flatten())
-                case_pred += list(case_outputs.argmax(dim=1).cpu().data.numpy().flatten())
+                punc_pred += list(
+                    punc_outputs.argmax(dim=1).cpu().data.numpy().flatten()
+                )
+                case_pred += list(
+                    case_outputs.argmax(dim=1).cpu().data.numpy().flatten()
+                )
         assert len(subwords) == len(punc_pred) == len(case_pred)
         # Convert sub-token predictions to full-token predictions
         out_tokens, punc_preds, case_preds = \
@@ -166,5 +170,4 @@ if __name__ == "__main__":
 
     data_test = load_file('data/mTEDx/fr/test.fr')
     print(data_test[54:55])
-    out_sentences = bert_punc_cap.predict(data_test[54:55])
-    print(out_sentences)
+    print(bert_punc_cap._get_labels(data_test[54:55]))
