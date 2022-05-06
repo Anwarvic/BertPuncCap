@@ -150,6 +150,46 @@ class DataHandler:
                 "Size mismatch when expanding"
         return out_tokens, out_punc_labels, out_case_labels
     
+    def _shrink(self, subwords, punc_preds, case_preds):
+        """
+        Does the opposite of _expand(). It converts the subwords into full
+        tokens.
+
+        Parameters
+        ----------
+        subwords: list(str)
+            A list of subwords.
+        punc_preds: list(list(int))
+            A list of predicted punctuation classes, one for each subword.
+        case_preds: list(list(int))
+            A list of predicted case classes, one for each subword.
+        
+        Returns:
+        out_tokens: list(str)
+            A list of a list of expanded tokens.
+        out_punc_preds: list(int)
+            A list of a list of expanded punctuation classes, one for each
+            sub-token.
+        out_case_preds: list(int)
+            A list of a list of expanded case classes, one for each sub-token.
+        """
+        i = 0
+        curr_word = ""
+        out_tokens, out_punc_preds, out_case_preds = [], [], []
+        while( i < len(subwords)):
+            curr_word += subwords[i]
+            while(i+1 < len(subwords) and subwords[i+1].startswith("##")):
+                i += 1
+                curr_word += subwords[i][2:]
+            out_tokens.append(curr_word)
+            out_punc_preds.append(punc_preds[i])
+            out_case_preds.append(case_preds[i])
+            curr_word = ""
+            i += 1
+        assert len(out_tokens) == len(out_punc_preds) == len(out_case_preds), \
+            "Size mismatch when flattening"
+        return out_tokens, punc_preds, case_preds
+    
     def _flatten(self, tokens, punc_labels, case_labels):
         """
         Converts the nested list of tokens to a list of tokens. Same happens
