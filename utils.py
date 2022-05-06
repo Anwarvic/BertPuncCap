@@ -18,6 +18,7 @@ def parse_yaml(filepath):
         return yaml.safe_load(stream)
         
 def load_checkpoint(checkpoint_path, device):
+    """Loads a checkpoint on device"""
     stat_dict = None
     if os.path.exists(os.path.join(checkpoint_path, "best_model")):
         print("Loading best model!")
@@ -42,23 +43,7 @@ def load_checkpoint(checkpoint_path, device):
             if new_key in ignore_keys:
                 continue
             new_stat_dict[new_key] = stat_dict[old_key]
-    return OrderedDict(new_stat_dict)
-
-def convert_to_full_tokens(subwords, punc_pred, case_pred):
-    i = 0
-    curr_word = ""
-    out_tokens, punc_preds, case_preds = [], [], []
-    while( i < len(subwords)):
-        curr_word += subwords[i]
-        while(i+1 < len(subwords) and subwords[i+1].startswith("##")):
-            i += 1
-            curr_word += subwords[i][2:]
-        out_tokens.append(curr_word)
-        punc_preds.append(punc_pred[i])
-        case_preds.append(case_pred[i])
-        curr_word = ""
-        i += 1
-    return out_tokens, punc_preds, case_preds
+    return OrderedDict(new_stat_dict)  
 
 def apply_labels_to_input(
         tokens_count_per_sent,
