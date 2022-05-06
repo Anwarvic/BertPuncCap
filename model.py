@@ -64,17 +64,15 @@ class BertPuncCap(nn.Module):
         punc_logits = self.punc_fc(self.dropout(self.punc_bn(x)))
         case_logits = self.case_fc(self.dropout(self.case_bn(x)))
         return punc_logits, case_logits
-   
-    def _get_labels(self, sentences, batch_size=64):
+
+    def _get_labels(self, data_loader):
         """
         Predicts the labels for the given data.
 
         Parameters
         ----------
-        sentences: list(str)
-            A list of cleaned sentences that will be labeled.
-        batch_size: int
-            The batch size for processing the test data (default 64).
+        data_loader: torch.utils.data.DataLoader
+            A data loader of the test data.
         
         Returns
         -------
@@ -89,10 +87,8 @@ class BertPuncCap(nn.Module):
             re-punctuation task while the other is for the re-capitalization
             task.
         """
-        subwords, punc_pred, case_pred = [], [], []
-        data_loader = \
-            self._data_handler.create_test_dataloader(sentences, batch_size)
         # Get predictions for sub-words
+        subwords, punc_pred, case_pred = [], [], []
         sg_size = self.hparams["segment_size"]
         for input_batch in tqdm(data_loader, total=len(data_loader)):
             with torch.no_grad():
@@ -142,8 +138,10 @@ class BertPuncCap(nn.Module):
         cleaned_tokens, _, _ = \
             self._data_handler._extract_tokens_labels(sentences, "Cleaning")
         # get labels
+        data_loader = \
+            self._data_handler.create_test_dataloader(sentences, batch_size)
         out_tokens, punc_preds, case_preds = \
-                                self._get_labels(sentences, batch_size)
+                                self._get_labels(data_loader, batch_size)
         # Apply labels to input sentences
         out_sentences = apply_labels_to_input(
             [len(sent_tokens) for sent_tokens in cleaned_tokens],
@@ -170,4 +168,4 @@ if __name__ == "__main__":
 
     data_test = load_file('data/mTEDx/fr/test.fr')
     print(data_test[54:55])
-    print(bert_punc_cap._get_labels(data_test[54:55]))
+    print(bert_punc_cap.predict(data_test[54:55]))
