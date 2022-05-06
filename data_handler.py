@@ -187,8 +187,8 @@ class DataHandler:
             curr_word = ""
             i += 1
         assert len(out_tokens) == len(out_punc_preds) == len(out_case_preds), \
-            "Size mismatch when flattening"
-        return out_tokens, punc_preds, case_preds
+            "Size mismatch when shrinking"
+        return out_tokens, out_punc_preds, out_case_preds
     
     def _flatten(self, tokens, punc_labels, case_labels):
         """
