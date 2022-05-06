@@ -27,7 +27,7 @@ class DataHandler:
         self.punc_to_class = punc_to_class
         self.case_to_class = case_to_class
     
-    def _extract_tokens_labels(self, sentences, desc="Extracting Labels"):
+    def _extract_tokens_labels(self, sentences, desc="Processing Input"):
         """
         Extracts punctuations & cases of every token of the given sentences.
 
@@ -61,14 +61,30 @@ class DataHandler:
             while ( i < len(sent_tokens)):
                 if i == len(sent_tokens)-1:
                     curr_token = sent_tokens[i]
-                    tmp_tokens.append(curr_token.lower())
-                    tmp_punc_labels.append(0) # index for other 'O'
-                    tmp_case_labels.append(self.case_to_class[get_case(curr_token)])
+                    # if curr_token is a special token
+                    if curr_token in self.tokenizer.special_tokens_map.values():
+                        tmp_tokens.append(curr_token)
+                        tmp_case_labels.append(0) #index for other case 'O'
+                    else: 
+                        tmp_tokens.append(curr_token.lower())
+                        tmp_case_labels.append(
+                            self.case_to_class[get_case(curr_token)]
+                        )
+                    tmp_punc_labels.append(0) # index for other punctuation 'O'
                     i += 1
                     continue
                 else:
                     curr_token, next_token = sent_tokens[i], sent_tokens[i+1]
-                    tmp_tokens.append(curr_token.lower())
+                    # if curr_token is a special token
+                    if curr_token in self.tokenizer.special_tokens_map.values():
+                        tmp_tokens.append(curr_token)
+                        tmp_case_labels.append(0) #index for other case 'O'
+                    else:
+                        tmp_tokens.append(curr_token.lower())
+                        tmp_case_labels.append(
+                            self.case_to_class[get_case(curr_token)]
+                        )
+                    # if next_token is a punctuation
                     if next_token in self.punc_to_class:
                         punc_label = self.punc_to_class[next_token]
                         i += 1
@@ -76,10 +92,9 @@ class DataHandler:
                         while i < len(sent_tokens) and sent_tokens[i] in self.punc_to_class:
                             i += 1
                     else:
-                        punc_label = 0 #label for other 'O
+                        punc_label = 0 #label for other punctuation 'O
                         i += 1
                     tmp_punc_labels.append(punc_label)
-                    tmp_case_labels.append(self.case_to_class[get_case(curr_token)])
             assert len(tmp_tokens) == len(tmp_punc_labels) == len(tmp_case_labels), \
                 f"Size mismatch when {desc}"
             tokens.append(tmp_tokens)
@@ -117,9 +132,10 @@ class DataHandler:
         for i in range(len(tokens)):
             tmp_tokens, tmp_punc_labels, tmp_case_labels = [], [], []
             for token, punc, case in zip(tokens[i], punc_labels[i], case_labels[i]):
-                # don't tokenize [unk] token
+                # don't tokenize special tokens like [unk]
                 subwords = self.tokenizer.tokenize(token) \
-                    if token != self.tokenizer.unk_token.lower() else [token]
+                    if token != self.tokenizer.special_tokens_map.values() \
+                    else [token]
                 tmp_tokens += subwords
                 #expand labels with other index (0)
                 tmp_punc_labels += [0]*(len(subwords)-1) + [punc]
