@@ -113,7 +113,7 @@ class BertPuncCap(nn.Module):
         assert len(subwords) == len(punc_pred) == len(case_pred)
         # Convert sub-token predictions to full-token predictions
         out_tokens, punc_preds, case_preds = \
-            convert_to_full_tokens(subwords, punc_pred, case_pred)
+            self._data_handler._shrink(subwords, punc_pred, case_pred)
         return out_tokens, punc_preds, case_preds
 
     def predict(self, sentences, batch_size=64):
