@@ -24,6 +24,9 @@ class BertPuncCap(nn.Module):
         super(BertPuncCap, self).__init__()
         # save important params
         self.bert = BERT_model
+        # freeze bert
+        for p in self.bert.parameters():
+            p.requires_grad=False
         self.bert.config.output_hidden_states=True
         self.tokenizer = BERT_tokenizer
         self.hparams = parse_yaml(os.path.join(model_path, "config.yaml"))
