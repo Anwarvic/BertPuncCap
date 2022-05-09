@@ -1,5 +1,7 @@
 import torch
 import numpy as np
+import logging
+logging.getLogger()
 from tqdm import tqdm
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -50,6 +52,7 @@ class DataHandler:
         """
         tokens, punc_labels, case_labels = [], [], []
         # combine subwords after tokenization
+        logging.debug("Combining subwords after tokenizing")
         sentences = [
             " ".join(self.tokenizer.tokenize(sent)).replace(' ##', '')
             for sent in sentences
@@ -128,6 +131,7 @@ class DataHandler:
         out_case_labels: list(list(int))
             A list of a list of expanded case classes, one for each sub-token.
         """
+        logging.debug("Expanding tokens & labels to the sub-token level")
         out_tokens, out_punc_labels, out_case_labels = [], [], []
         for i in range(len(tokens)):
             tmp_tokens, tmp_punc_labels, tmp_case_labels = [], [], []
@@ -173,6 +177,7 @@ class DataHandler:
         out_case_preds: list(int)
             A list of a list of expanded case classes, one for each sub-token.
         """
+        logging.debug("Combining subwords into full-tokens")
         i = 0
         curr_word = ""
         out_tokens, out_punc_preds, out_case_preds = [], [], []
@@ -213,6 +218,7 @@ class DataHandler:
         out_case_labels:
             A flattened list of the same input case classes.
         """
+        logging.debug("Flatten tokens & labels into big lists")
         out_tokens, out_punc_labels, out_case_labels = [], [], []
         for sent_tokens, sent_puncs, sent_cases in zip(tokens, punc_labels, case_labels):
             out_tokens.extend(sent_tokens)
@@ -242,6 +248,7 @@ class DataHandler:
             A nested list of samples/examples for the model to be trained on.
             The shape of list should be (num_sub-tokens x segment_size).
         """
+        logging.debug("Creating samples from subwords")
         # Make sure there are enough tokens
         min_required_length = self.segment_size // 2
         if len(sub_tokens) < min_required_length:
@@ -266,38 +273,7 @@ class DataHandler:
             out_samples.append(segment)
         return out_samples
     
-    def preprocess(self, sentences):
-        """
-        Preprocesses the input data and convert them into samples that the
-        model can train on.
-
-        Parameters
-        ----------
-        sentences: list(str)
-            A list of sentences to be preprocessed.
-        
-        Returns
-        -------
-        samples: list(list(int))
-            A nested list of samples/examples for the model to be trained on.
-            The shape of list should be (num_sub-tokens x segment_size).
-        """
-        # extract tokens & labels
-        tokens, punc_labels, case_labels = \
-                                    self._extract_tokens_labels(sentences)
-        # expand tokens & labels to the sub-word level
-        subtokens, punc_labels, case_labels = self._expand(tokens,
-                                                punc_labels, case_labels)
-        # flatten data
-        subtokens, punc_labels, case_labels = self._flatten(subtokens,
-                                                    punc_labels, case_labels)
-        # create samples
-        samples = self._create_samples(subtokens)
-        assert len(samples) == len(punc_labels) == len(case_labels), \
-            "Size mismatch when preprocessing"
-        return samples, punc_labels, case_labels
-
-    def create_train_dataloader(self, sentences, batch_size, shuffle=True):
+    def create_dataloader(self, sentences, batch_size, shuffle=True):
         """
         Loads the data as a torch.DataLoader for training or validation.
 
@@ -316,8 +292,19 @@ class DataHandler:
         data_loader: torch.utils.data.DataLoader
             A data loader of the train/valid data.
         """
-        samples, punc_labels, case_labels = self.preprocess(sentences)
-        assert len(samples) == len(punc_labels) == len(case_labels)
+        # extract tokens & labels
+        tokens, punc_labels, case_labels = \
+                                    self._extract_tokens_labels(sentences)
+        # expand tokens & labels to the sub-word level
+        subtokens, punc_labels, case_labels = self._expand(tokens,
+                                                punc_labels, case_labels)
+        # flatten data
+        subtokens, punc_labels, case_labels = self._flatten(subtokens,
+                                                    punc_labels, case_labels)
+        # create samples
+        samples = self._create_samples(subtokens)
+        assert len(samples) == len(punc_labels) == len(case_labels), \
+            "Size mismatch when preprocessing"
         # create data loader
         data_set = TensorDataset(
             torch.from_numpy(np.array(samples)).long(),
@@ -326,29 +313,6 @@ class DataHandler:
         )
         data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=shuffle)
         return data_loader
-    
-    def create_test_dataloader(self, sentences, batch_size):
-        """
-        Loads the data as a torch.DataLoader for testing.
-
-        Parameters
-        ----------
-        sentences: list(str)
-                A list of sentences to be labeled.
-        batch_size: int
-            The batch size.
-        
-        Returns
-        -------
-        data_loader: torch.utils.data.DataLoader
-            A data loader of the test data.
-        """
-        samples, _, _ = self.preprocess(sentences)
-        # create data loader without any labels
-        data_set = TensorDataset(torch.from_numpy(np.array(samples)).long())
-        data_loader = DataLoader(data_set, batch_size=batch_size)
-        return data_loader
-
 
 if __name__ == "__main__":
     from transformers import BertTokenizer
@@ -362,5 +326,6 @@ if __name__ == "__main__":
             params["punc_to_class"], params["case_to_class"])
     
     # Should be no AssertionError
-    data_handler.create_train_dataloader(sentences, 64)
+    data_loader = data_handler.create_dataloader(sentences, 64)
+    print("HI")
 
