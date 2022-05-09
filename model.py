@@ -1,6 +1,9 @@
 import os
 import torch
+import logging
+logging.getLogger()
 from torch import nn
+from glob import glob
 from tqdm import tqdm
 
 from utils import *
@@ -24,7 +27,7 @@ class BertPuncCap(nn.Module):
         super(BertPuncCap, self).__init__()
         # save important params
         self.bert = BERT_model
-        # freeze bert
+        logging.debug("Freezing pre-trained BERT's parameters")
         for p in self.bert.parameters():
             p.requires_grad=False
         self.bert.config.output_hidden_states=True
@@ -33,6 +36,7 @@ class BertPuncCap(nn.Module):
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
+        logging.info(f"Device found is: {self.device}")
         # get needed params
         dropout_rate = self.hparams["dropout"]
         hidden_size = self.bert.config.hidden_size
@@ -49,7 +53,12 @@ class BertPuncCap(nn.Module):
         self.case_fc = nn.Linear(segment_size*hidden_size, case_size)
         self.dropout = nn.Dropout(dropout_rate)
         # load trained model's stat_dict
-        self.load_state_dict(load_checkpoint(model_path, self.device))
+        if len(glob("*.ckpt")) > 1:
+            self.load_state_dict(
+                load_checkpoint(model_path, self.device, option="latest")
+            )
+        else:
+            logging.warn("No checkpoints found, initializing model from scratch!")
 
     def forward(self, x):
         """
