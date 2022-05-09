@@ -2,4 +2,5 @@ tqdm
 numpy
 PyYAML
 torch
+sklearn
 transformers
