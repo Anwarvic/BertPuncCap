@@ -13,7 +13,15 @@ def load_file(filename):
         data = [line.strip() for line in f.readlines()]
     return data
 
+def parse_yaml(filepath):
+    """Reads & parse a YAML file."""
+    with open(filepath, "r", encoding='utf-8') as fin:
+        return yaml.safe_load(fin)
 
+def write_yaml(d, filepath):
+    """Writes a dictionary into a YAML file"""
+    with open(filepath, 'w', encoding='utf-8') as fout:
+        yaml.dump(d, fout, default_flow_style=False, allow_unicode=True)
 
 def load_checkpoint(ckpt_path, device, option="best"):
     """Loads a checkpoint on device"""
