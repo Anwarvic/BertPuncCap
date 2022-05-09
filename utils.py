@@ -1,9 +1,10 @@
-import re
 import os
 import yaml
 import torch
-import warnings
+import logging
+logging.getLogger()
 import numpy as np
+from glob import glob
 from collections import OrderedDict
 
 def load_file(filename):
@@ -12,31 +13,34 @@ def load_file(filename):
         data = [line.strip() for line in f.readlines()]
     return data
 
-def parse_yaml(filepath):
-    """Parses a yaml file."""
-    with open(filepath, "r") as stream:
-        return yaml.safe_load(stream)
-        
-def load_checkpoint(checkpoint_path, device):
+
+
+def load_checkpoint(ckpt_path, device, option="best"):
     """Loads a checkpoint on device"""
     stat_dict = None
-    if os.path.exists(os.path.join(checkpoint_path, "best_model")):
-        print("Loading best model!")
+    if option == "best":
+        logging.info("Loading best model!")
+        if os.path.exists(os.path.join(ckpt_path, "best")):
+            stat_dict = torch.load(
+                os.path.join(ckpt_path, 'best'),
+                map_location=device
+            )
+        else:
+            logging.warn("Couldn't load best checkpoint, backing off to latest")
+            option = "latest"
+    if option == "latest":
+        logging.info("Loading latest checkpoint!")
+        latest_checkpoint = sorted(glob(f"{ckpt_path}/*.ckpt"))[-1]
         stat_dict = torch.load(
-            os.path.join(checkpoint_path, 'best_model'),
-            map_location=device
-        )
-    elif os.path.exists(os.path.join(checkpoint_path, "latest_model")):
-        print("Loading latest model!")
-        stat_dict = torch.load(
-                os.path.join(checkpoint_path, 'latest_model'),
+                latest_checkpoint,
                 map_location=device
         )
     else:
-        warnings.warn("CAUTION! Initializing model from scratch!")
+        raise FileNotFoundError("Can't load pre-trained checkpoint!")
     new_stat_dict = {}
     ignore_keys = {"bn.weight", "bn.bias", "bn.running_mean",
         "bn.running_var", "bn.num_batches_tracked", "fc.weight", "fc.bias"}
+    logging.debug("Removing old BertPuncCap keys if found")
     if stat_dict:
         for old_key in stat_dict.keys():
             new_key = old_key.partition('.')[-1]
