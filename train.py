@@ -1,6 +1,11 @@
-from lib2to3.pgen2 import token
 import os
+import logging
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 def load_pretrained_bert_tokenizer(pretrained_name):
     if pretrained_name in {"bert-base-cased", "bert-base-uncased",
@@ -48,7 +53,7 @@ def create_data_loaders(
         case_to_class,
     ):
     from data_handler import DataHandler
-    if dataset_name.lower() == "mtedx":
+    if dataset_name == "mTEDx":
         langs = [lang.strip() for lang in langs.split(',')]
         train_sents, valid_sents, test_sents = [], [], []
         for lang in langs:
@@ -62,19 +67,22 @@ def create_data_loaders(
     else:
         raise ValueError(f"{dataset_name} dataset is not supported!")
     # create data loaders
-    data_handler = DataHandler(tokenizer, segment_size,
-        punc_to_class, case_to_class, batch_size)
-    train_dataloader = data_handler.create_dataloader(train_sents, batch_size)
-    valid_dataloader = data_handler.create_dataloader(valid_sents, batch_size)
-    test_dataloader  = data_handler.create_dataloader(test_sents,  batch_size)
+    data_handler = DataHandler(tokenizer, segment_size, punc_to_class,
+                                case_to_class)
+    # TODO: USE ALL DATA, INSTEAD OF JUST THE FIRST FEW
+    logging.debug("Creating dataloader for train data")
+    train_dataloader = data_handler.create_dataloader(train_sents[:2000], batch_size, True)
+    logging.debug("Creating dataloader for valid data")
+    valid_dataloader = data_handler.create_dataloader(valid_sents[:2000], batch_size, True)
+    logging.debug("Creating dataloader for test data")
+    test_dataloader  = data_handler.create_dataloader(test_sents[:2000],  batch_size)
     return train_dataloader, valid_dataloader, test_dataloader
-
-
 
 
 
 if __name__ == "__main__":
     import argparse
+    from pprint import pformat
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--pretrained_bert', type=str,
@@ -107,10 +115,10 @@ if __name__ == "__main__":
     parser.add_argument('--patience', type=int, default=5,
         help='An integer of how many validations to wait before early stopping.')
     
-    args = parser.parse_args()
+    args = vars(parser.parse_args())
 
     # other hyper-parameters
-    args.punc_to_class = {
+    args["punc_to_class"] = {
         ",": 1, "،": 1,
         ".": 2, "...": 2,
         "?": 3, '؟': 3, '¿': 3,
@@ -118,7 +126,7 @@ if __name__ == "__main__":
         ":": 5,
         ";": 6, "؛": 6,
     }
-    args.class_to_punc = {
+    args["class_to_punc"] = {
         0: '',   #'O'
         1: ',',  #'COMMA'
         2: '.',  #'PERIOD'
@@ -127,28 +135,67 @@ if __name__ == "__main__":
         5: ':',   #"COLON"
         6: ';',  #"SEMICOLON"
     }
-    args.case_to_class = {
+    args["case_to_class"] = {
         'O': 0,  #Other 
         'F': 1,  #First_cap 
         'A': 2   #All_cap
     }
-    args.class_to_case = {
+    args["class_to_case"] = {
         0: 'O',  #Other
         1: 'F',  #First_cap
         2: 'A'   #All_cap
     }
-    print(args)
+    # log training arguments
+    logging.info("Initialize training with the following arguments:")
+    logging.info(pformat(args))
 
     # load pre-trained model & tokenizer
-    tokenizer, model = load_pretrained_bert_tokenizer(args["pretrained_bert"])
+    logging.info(f"Loading pre-trained BERT: {args['pretrained_bert']}")
+    BERT_tokenizer, BERT_model = load_pretrained_bert_tokenizer(
+                                                    args["pretrained_bert"])     
+    # save model's hyper-parameters in save_path
+    os.makedirs(args["save_path"], exist_ok=True)
+    from utils import write_yaml
+    write_yaml({
+        "segment_size": args["segment_size"],
+        "dropout": 0.3,
+        "punc_to_class": args["punc_to_class"],
+        "class_to_punc": args["class_to_punc"],
+        "case_to_class": args["case_to_class"],
+        "class_to_case": args["class_to_case"]
+    }, os.path.join(args["save_path"], "config.yaml"))
+    
+    # create bert_punc_cap
+    logging.info("Loading BertPuncCap:")
+    from model import BertPuncCap
+    bert_punc_cap = BertPuncCap(BERT_model, BERT_tokenizer,
+            model_path=os.path.join(args["save_path"]))
+    
     # load optimzier
-    optimzier = load_optimizer(args["optimizer"], args["lr"])
+    logging.info(f"Loading optimizer: {args['optimizer']}")
+    optimizer = load_optimizer(bert_punc_cap, args["optimizer"], args["lr"])
+    
     # load criterion
+    logging.info(f"Loading criterion: {args['criterion']}")
     criterion = load_criterion(args["criterion"])
-    # load data loaders
+
+     # load data loaders
+    logging.info(f"Loading dataset: {args['dataset']} for langs: {args['langs']}")
     train_dataloader, valid_dataloader, test_dataloader = \
-        create_data_loaders(args["dataset"], args["langs"], tokenizer,
+        create_data_loaders(args["dataset"], args["langs"], BERT_tokenizer,
             args["segment_size"], args["batch_size"],
             args["punc_to_class"], args["case_to_class"])
+    
+    # create Trainer
+    logging.info("Loading training")
+    from trainer import Trainer
+    trainer = Trainer(bert_punc_cap, optimizer, criterion, train_dataloader,
+                    valid_dataloader, args["save_path"], args["batch_size"],
+                    args["lr"], args["max_epochs"], args["num_validations"],
+                    args["patience"], args["alpha"])
+    logging.info("Started training...")
+    # trainer.train
+
+    
 
     
