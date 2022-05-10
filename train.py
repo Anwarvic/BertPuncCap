@@ -71,11 +71,11 @@ def create_data_loaders(
                                 case_to_class)
     # TODO: USE ALL DATA, INSTEAD OF JUST THE FIRST FEW
     logging.debug("Creating dataloader for train data")
-    train_dataloader = data_handler.create_dataloader(train_sents[:2000], batch_size, True)
+    train_dataloader = data_handler.create_dataloader(train_sents[:20], batch_size, True)
     logging.debug("Creating dataloader for valid data")
-    valid_dataloader = data_handler.create_dataloader(valid_sents[:2000], batch_size, True)
+    valid_dataloader = data_handler.create_dataloader(valid_sents[:20], batch_size, True)
     logging.debug("Creating dataloader for test data")
-    test_dataloader  = data_handler.create_dataloader(test_sents[:2000],  batch_size)
+    test_dataloader  = data_handler.create_dataloader(test_sents[:20],  batch_size)
     return train_dataloader, valid_dataloader, test_dataloader
 
 
@@ -114,6 +114,10 @@ if __name__ == "__main__":
             help='An integer describing how many times to validate per epoch.')
     parser.add_argument('--patience', type=int, default=5,
         help='An integer of how many validations to wait before early stopping.')
+    parser.add_argument('--stop_metric', type=str,
+        choices=["valid_loss", "punc_valid_loss", "case_valid_loss",
+                 "punc_overall_f1", "case_overall_f1", "overall_f1"],
+        help='The metric at which early-stopping should be applied.')
     
     args = vars(parser.parse_args())
 
@@ -179,7 +183,7 @@ if __name__ == "__main__":
     logging.info(f"Loading criterion: {args['criterion']}")
     criterion = load_criterion(args["criterion"])
 
-     # load data loaders
+    # load data loaders
     logging.info(f"Loading dataset: {args['dataset']} for langs: {args['langs']}")
     train_dataloader, valid_dataloader, test_dataloader = \
         create_data_loaders(args["dataset"], args["langs"], BERT_tokenizer,
@@ -192,9 +196,9 @@ if __name__ == "__main__":
     trainer = Trainer(bert_punc_cap, optimizer, criterion, train_dataloader,
                     valid_dataloader, args["save_path"], args["batch_size"],
                     args["lr"], args["max_epochs"], args["num_validations"],
-                    args["patience"], args["alpha"])
+                    args["alpha"], args["patience"], args["stop_metric"])
     logging.info("Started training...")
-    # trainer.train
+    trainer.train()
 
     
 
