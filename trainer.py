@@ -1,7 +1,6 @@
 import os
 import torch
 import numpy as np
-import pandas as pd
 import logging
 logging.getLogger()
 from tqdm import tqdm
@@ -57,22 +56,27 @@ class Trainer:
         for inputs in tqdm(self.valid_dataloader, total=len(self.valid_dataloader)):
             with torch.no_grad():
                 samples, punc_labels, case_labels = inputs
-                # convert tensor to device
+                # move tensor to device
+                logging.debug(f"Moving valid-batch tensors to {self.device}")
                 samples = samples.to(self.device)
                 punc_labels = punc_labels.to(self.device)
                 case_labels = case_labels.to(self.device)
+                # predict
                 punc_outputs, case_outputs = self.model.module(samples)
                 # compute loss
+                logging.debug("Computing validation loss")
                 punc_loss = self.criterion(punc_outputs, punc_labels)
                 case_loss = self.criterion(case_outputs, case_labels)
                 alpha = self.hparams["alpha"]
                 loss = (alpha * punc_loss) + (1-alpha) * case_loss
                 # get predictions
+                logging.debug("Calculating model's predictions")
                 punc_labels = punc_labels.cpu().data.numpy().flatten()
                 case_labels = case_labels.cpu().data.numpy().flatten()
                 punc_preds = punc_outputs.argmax(dim=1).cpu().data.numpy().flatten()
                 case_preds = case_outputs.argmax(dim=1).cpu().data.numpy().flatten()
                 # compute other metrics
+                logging.debug("Computing validation F1 scores")
                 punc_f1 = metrics.f1_score(punc_labels, punc_preds, average=None)
                 case_f1 = metrics.f1_score(case_labels, case_preds, average=None)
                 # append the info
@@ -103,20 +107,24 @@ class Trainer:
 
             for inputs in self.train_dataloader:
                 samples, punc_labels, case_labels = inputs
-                # convert tensor to device
+                # move tensors to device
+                logging.debug(f"Moving train-batch tensors to {self.device}")
                 samples = samples.to(self.device)
                 punc_labels = punc_labels.to(self.device)
                 case_labels = case_labels.to(self.device)
                 # predict
                 punc_outputs, case_outputs = self.model.module(samples)
                 # compute loss
+                logging.debug("Computing training loss")
                 punc_loss = self.criterion(punc_outputs, punc_labels)
                 case_loss = self.criterion(case_outputs, case_labels)
                 alpha = self.hparams["alpha"]
                 loss = (alpha * punc_loss) + (1-alpha) * case_loss
+                logging.debug("Started Backpropagating!!")
                 loss.backward()
                 self.optimizer.step()
-                self.optimizer.zero_grad()      
+                self.optimizer.zero_grad()
+                logging.debug("Finished Backpropagating!!")
                 pbar.update()
                 if batch_count % print_every == 0:
                     pbar.close()
@@ -146,7 +154,7 @@ class Trainer:
 
             pbar.close()
             # save the model
-            ckpt_path = os.path.join(self.save_path, f"{epoch+1}.ckpt")
+            ckpt_path = os.path.join(self.save_path, f"{epoch}.ckpt")
             logging.info("Saving the model's checkpoint @ " + ckpt_path)
             torch.save(self.model.state_dict(), ckpt_path)
             if self._progress_writer.should_stop():
