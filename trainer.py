@@ -51,6 +51,7 @@ class Trainer:
         )
 
     def validate(self):
+        """Evaluates the model"""
         losses, punc_losses, case_losses, punc_f1s, case_f1s = [],[],[],[],[]
         logging.info("Started validating the model on the validation set")
         for inputs in tqdm(self.valid_dataloader, total=len(self.valid_dataloader)):
@@ -93,6 +94,7 @@ class Trainer:
         return val_loss, punc_loss, case_loss, punc_f1, case_f1
 
     def train(self):
+        """Trains the model"""
         logging.debug("Changing the model's mode to `train`")
         self.model.train()
         print_every = (
@@ -135,8 +137,11 @@ class Trainer:
                     # evaluate model
                     logging.debug("Changing the model's mode to `eval`")
                     self.model.eval()
+                    # start validating
+                    old_best_val = self._progress_writer._best_valid
                     (valid_loss, punc_valid_loss, case_valid_loss,
                     punc_f1, case_f1) = self.validate()
+                    new_best_val = self._progress_writer._best_valid
                     # report results
                     self._progress_writer.write_results(
                         epoch, validation_counter,
@@ -144,7 +149,11 @@ class Trainer:
                         valid_loss, punc_valid_loss, case_valid_loss,
                         punc_f1, case_f1
                     )
-                    # TODO save best model
+                    # check if this is the best model so far
+                    if new_best_val > old_best_val:
+                        ckpt_path = os.path.join(self.save_path, "best.ckpt")
+                        logging.info("Saving best checkpoint @ " + ckpt_path)
+                        torch.save(self.model.state_dict(), ckpt_path)
                     # going back to train mode
                     logging.debug("Changing the model's mode back to `train`")
                     self.model.train()
