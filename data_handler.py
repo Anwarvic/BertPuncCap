@@ -327,5 +327,4 @@ if __name__ == "__main__":
     
     # Should be no AssertionError
     data_loader = data_handler.create_dataloader(sentences, 64)
-    print("HI")
 
