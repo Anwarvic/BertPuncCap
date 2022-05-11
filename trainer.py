@@ -53,7 +53,7 @@ class Trainer:
 
     def validate(self):
         losses, punc_losses, case_losses, punc_f1s, case_f1s = [],[],[],[],[]
-        logging.info("Started validating the model on the validation set:")
+        logging.info("Started validating the model on the validation set")
         for inputs in tqdm(self.valid_dataloader, total=len(self.valid_dataloader)):
             with torch.no_grad():
                 samples, punc_labels, case_labels = inputs
@@ -84,7 +84,8 @@ class Trainer:
         # average losses & other metrics over all validation set.
         val_loss, punc_loss, case_loss = \
             np.mean(losses), np.mean(punc_losses), np.mean(case_losses)
-        punc_f1, case_f1 = np.mean(punc_f1s), np.mean(case_f1s)
+        punc_f1 = np.mean(np.array(punc_f1s), axis=0)
+        case_f1 = np.mean(np.array(case_f1s), axis=0)
         return val_loss, punc_loss, case_loss, punc_f1, case_f1
 
     def train(self):
@@ -137,18 +138,22 @@ class Trainer:
                     )
                     # TODO save best model
                     # going back to train mode
-                    logging.debug("Changing the model's mode to `train`")
+                    logging.debug("Changing the model's mode back to `train`")
                     self.model.train()
                     pbar = tqdm(total=print_every)
                     validation_counter += 1
                 batch_count += 1
 
             pbar.close()
+            # save the model
+            ckpt_path = os.path.join(self.save_path, f"{epoch+1}.ckpt")
+            logging.info("Saving the model's checkpoint @ " + ckpt_path)
+            torch.save(self.model.state_dict(), ckpt_path)
             if self._progress_writer.should_stop():
-                logging.info(f"Early stopping at epoch {epoch}")
-                logging.info("Saving the model's checkpoint")
-            torch.save(self.model.state_dict(), self.save_path+f"/{epoch}.ckpt")
-            if epoch < self.hparams["epochs"]-1:
+                logging.info(
+                    f"Early stopping at epoch {epoch} " +
+                    f"with {self.hparams['stop_metric']} = " +
+                    str(self._progress_writer._best_valid))
+                break
+            if epoch < self.hparams["epochs"]:
                 pbar = tqdm(total=print_every)
-            epoch += 1
-

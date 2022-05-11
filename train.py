@@ -199,7 +199,3 @@ if __name__ == "__main__":
                     args["alpha"], args["patience"], args["stop_metric"])
     logging.info("Started training...")
     trainer.train()
-
-    
-
-    
