@@ -173,6 +173,8 @@ if __name__ == "__main__":
     from pprint import pformat
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('--seed', type=int, default=1234,
+                help='Seed for PyTorch, Numpy and random')
     parser.add_argument('--pretrained_bert', type=str,
                 default="bert-base-multilingual-cased",
                 help='A text describing the pretrianed bert from HuggingFace.')
@@ -240,6 +242,11 @@ if __name__ == "__main__":
     # log training arguments
     logging.info("Initialize training with the following arguments:")
     logging.info(pformat(args))
+
+    # setting the seed
+    logging.info(f"Setting the seed to: {args['seed']}")
+    from utils import set_all_seeds
+    set_all_seeds(args["seed"])
 
     # load pre-trained model & tokenizer
     logging.info(f"Loading pre-trained BERT: {args['pretrained_bert']}")
