@@ -153,18 +153,17 @@ def create_data_loaders(
     else:
         raise ValueError(f"{dataset_name} dataset is not supported!")
     # create data loaders
-    data_handler = DataHandler(tokenizer, segment_size, punc_to_class,
-                                case_to_class)
-    # TODO: USE ALL DATA, INSTEAD OF JUST THE FIRST FEW
+    data_handler = \
+        DataHandler(tokenizer, segment_size, punc_to_class,case_to_class)
     logging.info("Creating dataloader for train data")
     train_dataloader = \
-            data_handler.create_dataloader(train_sents[:50], batch_size, True)
+            data_handler.create_dataloader(train_sents, batch_size, True)
     logging.info("Creating dataloader for valid data")
     valid_dataloader = \
-            data_handler.create_dataloader(valid_sents[:50], batch_size, True)
+            data_handler.create_dataloader(valid_sents, batch_size, True)
     logging.info("Creating dataloader for test data")
     test_dataloader  = \
-            data_handler.create_dataloader(test_sents[:20],  batch_size)
+            data_handler.create_dataloader(test_sents,  batch_size)
     return train_dataloader, valid_dataloader, test_dataloader
 
 
@@ -275,13 +274,12 @@ if __name__ == "__main__":
     # load data loaders
     logging.info(f"Loading dataset: {args['dataset']} "
                 + "for langs: [{args['langs']}]")
-    train_dataloader, valid_dataloader, test_dataloader = \
+    train_dataloader, valid_dataloader, _ = \
         create_data_loaders(args["dataset"], args["langs"], BERT_tokenizer,
             args["segment_size"], args["batch_size"],
             args["punc_to_class"], args["case_to_class"])
     
     # create Trainer
-    logging.info("Loading training")
     from trainer import Trainer
     trainer = Trainer(bert_punc_cap, optimizer, criterion, train_dataloader,
                     valid_dataloader, args["save_path"], args["batch_size"],
