@@ -20,6 +20,7 @@ class ProgressReportWriter:
         self._stop_metric = stop_metric
         self._class_to_punc = class_to_punc
         self._class_to_case = class_to_case
+        logging.info("Initializing the ProgressReportWriter module")
         # create headers for the progress report file
         self._headers = ["time", "epoch", "validation_num",
             "train_loss", "punc_train_loss", "case_train_loss",
@@ -37,7 +38,7 @@ class ProgressReportWriter:
             valid_results = df[self._stop_metric].values
             best_valid_idx = int(np.where(valid_results == self._best_valid)[-1])
             idx = max(best_valid_idx, len(df) - self._patience)
-            self._last_few_valid_scores = deque(df[self._stop_metric][-idx:])
+            self._last_few_valid_scores = deque(df[self._stop_metric][idx:])
         else:
             logging.info("Couldn't load progress report, so creating one!")
             # initialize important variables
@@ -61,7 +62,7 @@ class ProgressReportWriter:
         punc_f1_scores,
         case_f1_scores
     ):
-        PRECISION = 3 #round precision
+        PRECISION = 5 #round precision
         results = {}
         results["time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         results["epoch"] = epoch
@@ -90,7 +91,7 @@ class ProgressReportWriter:
         })
         logged_results = "\t".join([str(results[key]) for key in self._headers])
         logging.info("Model validation results are:\n"
-                    +"\t".join(self._headers)+'\n'+logged_results)
+                    + "\t".join(self._headers) + '\n' + logged_results)
         with open(self.progress_filepath, 'a') as fout:
             fout.write(logged_results+'\n')
         # update member variables
@@ -101,6 +102,8 @@ class ProgressReportWriter:
         self._last_few_valid_scores.append(results[self._stop_metric])
     
     def should_stop(self):
+        """Checks the possibility of early-stopping."""
+        logging.debug("Checking the possibility of early-stopping.")
         # higher is better
         if 'f1' in self._stop_metric:
             if ((len(self._last_few_valid_scores) == self._patience)
