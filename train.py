@@ -1,13 +1,30 @@
 import os
 import logging
 
+# create logger for the project.
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
 def load_pretrained_bert_tokenizer(pretrained_name):
+    """
+    Loads pretrained BERT model and tokenizer from HuggingFace.
+
+    Parameters
+    ----------
+    pretrained_name: str
+        The pre-trained name for the model on HuggingFace's hub.
+        Ref: https://huggingface.co/models
+    
+    Returns
+    -------
+    tokenizer: transformers.PreTrainedTokenizer
+            A tokenizer object from the HuggingFace's `transformers` package.
+    model: transformers.PreTrainedModel
+        The BERT pre-trained model at HuggingFace's `transformers` package.
+    """
     if pretrained_name in {"bert-base-cased", "bert-base-uncased",
                             "bert-base-multilingual-cased",
                             "bert-base-multilingual-uncased"}:
@@ -29,14 +46,54 @@ def load_pretrained_bert_tokenizer(pretrained_name):
     model = BERT_module.from_pretrained(pretrained_name)
     return tokenizer, model
 
-def load_optimizer(bert_punc_cap, optimzier_name, learning_rate):
-    if optimzier_name.lower() == "adam":
+def load_optimizer(bert_punc_cap, optimizer_name, learning_rate):
+    """
+    Loads the optimizer from PyTorch.
+
+    Parameters
+    ----------
+    bert_punc_cap: torch.nn.Module
+        The model responsible for restoring punctuations & capitalization.
+    optimizer_name: str
+        The name of the Optimizer Module on PyTorch.
+    learning_rate: float
+        The learning rate.
+
+    Returns
+    -------
+    torch.optim.Optimizer
+        The optimizer.
+    
+    Raises
+    ------
+    ValueError:
+        If the given name wasn't supported!
+    """
+    if optimizer_name.lower() == "adam":
         from torch.optim import Adam
         return Adam(bert_punc_cap.parameters(), lr=learning_rate)
     else:
-        raise ValueError(f"{optimzier_name} optimizer is not supported!")
+        raise ValueError(f"{optimizer_name} optimizer is not supported!")
 
 def load_criterion(criterion_name):
+    """
+    Loads the criterion class from PyTorch.
+
+    Parameters
+    ----------
+    criterion_name: str
+        The name of the criterion class on PyTorch.
+
+    Returns
+    -------
+    torch.nn.Loss
+        The Loss function.
+    
+    Raises
+    ------
+    ValueError:
+        If the given name wasn't supported!
+    """
     if criterion_name.lower() == "cross_entropy":
         from torch.nn import CrossEntropyLoss
         return CrossEntropyLoss()
@@ -52,6 +109,35 @@ def create_data_loaders(
         punc_to_class,
         case_to_class,
     ):
+    """
+    Creates train, valid, and test dataloaders for training.
+
+    Parameters
+    ----------
+    dataset_name: str
+        The name of the dataset.
+    langs: list(str)
+        A list of supported languages.
+    tokenizer: transformers.PreTrainedTokenizer
+        A tokenizer object from the HuggingFace's `transformers` package.
+    segment_size: int
+        The
+    batch_size: int
+        The batch size.
+    punc_to_class: dict
+        A dictionary mapping a punctuation token to the class index.
+    case_to_class: dict
+        A dictionary mapping a case token to the class index.
+    
+    Returns
+    -------
+    train_dataloader: torch.utils.data.DataLoader
+        A data loader of the train data.
+    valid_dataloader: torch.utils.data.DataLoader
+        A data loader of the valid data.
+    test_dataloader: torch.utils.data.DataLoader
+        A data loader of the test data.
+    """
     from data_handler import DataHandler
     if dataset_name == "mTEDx":
         langs = [lang.strip() for lang in langs.split(',')]
@@ -70,12 +156,15 @@ def create_data_loaders(
     data_handler = DataHandler(tokenizer, segment_size, punc_to_class,
                                 case_to_class)
     # TODO: USE ALL DATA, INSTEAD OF JUST THE FIRST FEW
-    logging.debug("Creating dataloader for train data")
-    train_dataloader = data_handler.create_dataloader(train_sents[:20], batch_size, True)
-    logging.debug("Creating dataloader for valid data")
-    valid_dataloader = data_handler.create_dataloader(valid_sents[:20], batch_size, True)
-    logging.debug("Creating dataloader for test data")
-    test_dataloader  = data_handler.create_dataloader(test_sents[:20],  batch_size)
+    logging.info("Creating dataloader for train data")
+    train_dataloader = \
+            data_handler.create_dataloader(train_sents[:50], batch_size, True)
+    logging.info("Creating dataloader for valid data")
+    valid_dataloader = \
+            data_handler.create_dataloader(valid_sents[:50], batch_size, True)
+    logging.info("Creating dataloader for test data")
+    test_dataloader  = \
+            data_handler.create_dataloader(test_sents[:20],  batch_size)
     return train_dataloader, valid_dataloader, test_dataloader
 
 
@@ -118,7 +207,7 @@ if __name__ == "__main__":
         choices=["valid_loss", "punc_valid_loss", "case_valid_loss",
                  "punc_overall_f1", "case_overall_f1", "overall_f1"],
         help='The metric at which early-stopping should be applied.')
-    
+    # parse arguments
     args = vars(parser.parse_args())
 
     # other hyper-parameters
@@ -155,8 +244,8 @@ if __name__ == "__main__":
 
     # load pre-trained model & tokenizer
     logging.info(f"Loading pre-trained BERT: {args['pretrained_bert']}")
-    BERT_tokenizer, BERT_model = load_pretrained_bert_tokenizer(
-                                                    args["pretrained_bert"])     
+    BERT_tokenizer, BERT_model = \
+                load_pretrained_bert_tokenizer(args["pretrained_bert"])     
     # save model's hyper-parameters in save_path
     os.makedirs(args["save_path"], exist_ok=True)
     from utils import write_yaml
@@ -170,12 +259,12 @@ if __name__ == "__main__":
     }, os.path.join(args["save_path"], "config.yaml"))
     
     # create bert_punc_cap
-    logging.info("Loading BertPuncCap:")
+    logging.info("Loading BertPuncCap")
     from model import BertPuncCap
     bert_punc_cap = BertPuncCap(BERT_model, BERT_tokenizer,
             model_path=os.path.join(args["save_path"]))
     
-    # load optimzier
+    # load optimizer
     logging.info(f"Loading optimizer: {args['optimizer']}")
     optimizer = load_optimizer(bert_punc_cap, args["optimizer"], args["lr"])
     
@@ -184,7 +273,8 @@ if __name__ == "__main__":
     criterion = load_criterion(args["criterion"])
 
     # load data loaders
-    logging.info(f"Loading dataset: {args['dataset']} for langs: {args['langs']}")
+    logging.info(f"Loading dataset: {args['dataset']} "
+                + "for langs: [{args['langs']}]")
     train_dataloader, valid_dataloader, test_dataloader = \
         create_data_loaders(args["dataset"], args["langs"], BERT_tokenizer,
             args["segment_size"], args["batch_size"],
