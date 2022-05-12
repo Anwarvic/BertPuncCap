@@ -25,6 +25,7 @@ class Trainer:
             patience,
             stop_metric
         ):
+        logging.info("Initializing the Trainer module")
         self.model = torch.nn.DataParallel(bert_punc_cap)
         self.device = bert_punc_cap.device
         self.optimizer = optimizer
@@ -100,13 +101,13 @@ class Trainer:
         print_every = (
             round(len(self.train_dataloader)/self.hparams["num_validations"])
         )
-        pbar = tqdm(total=print_every)
         
         epoch = self._progress_writer._curr_epoch
         while(epoch < self.hparams["epochs"]):
             batch_count = 1
             validation_counter = 1
-
+            logging.info(f"Start training for epoch: {epoch}")
+            pbar = tqdm(total=print_every)
             for inputs in self.train_dataloader:
                 samples, punc_labels, case_labels = inputs
                 # move tensors to device
@@ -141,7 +142,6 @@ class Trainer:
                     old_best_val = self._progress_writer._best_valid
                     (valid_loss, punc_valid_loss, case_valid_loss,
                     punc_f1, case_f1) = self.validate()
-                    new_best_val = self._progress_writer._best_valid
                     # report results
                     self._progress_writer.write_results(
                         epoch, validation_counter,
@@ -150,6 +150,7 @@ class Trainer:
                         punc_f1, case_f1
                     )
                     # check if this is the best model so far
+                    new_best_val = self._progress_writer._best_valid
                     if new_best_val > old_best_val:
                         ckpt_path = os.path.join(self.save_path, "best.ckpt")
                         logging.info("Saving best checkpoint @ " + ckpt_path)
@@ -157,11 +158,10 @@ class Trainer:
                     # going back to train mode
                     logging.debug("Changing the model's mode back to `train`")
                     self.model.train()
-                    pbar = tqdm(total=print_every)
                     validation_counter += 1
                 batch_count += 1
 
-            pbar.close()
+            logging.info(f"Done training for epoch: {epoch}")
             # save the model
             ckpt_path = os.path.join(self.save_path, f"{epoch}.ckpt")
             logging.info("Saving the model's checkpoint @ " + ckpt_path)
@@ -172,5 +172,5 @@ class Trainer:
                     f"with {self.hparams['stop_metric']} = " +
                     str(self._progress_writer._best_valid))
                 break
-            if epoch < self.hparams["epochs"]:
-                pbar = tqdm(total=print_every)
+            pbar.close()
+            epoch += 1
