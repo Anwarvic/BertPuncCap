@@ -32,7 +32,7 @@ class ProgressReportWriter:
             logging.info("Reading progress report!")
             df = pd.read_csv(progress_filepath, sep='\t')
             # load important variables from progress file
-            self._curr_epoch = max(df["epoch"])
+            self._curr_epoch = max(df["epoch"])+1
             self._best_valid = min(df[self._stop_metric]) \
                 if 'loss' in stop_metric else max(df[self._stop_metric])
             valid_results = df[self._stop_metric].values
