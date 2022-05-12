@@ -1,6 +1,7 @@
 import os
 import yaml
 import torch
+import random
 import logging
 logging.getLogger()
 import numpy as np
@@ -114,3 +115,11 @@ def sum_params(model):
         n = p.cpu().data.numpy()
         s += np.sum(n)
     return s
+
+def set_all_seeds(seed):
+    random.seed(seed)
+    # os.environ('PYTHONHASHSEED') = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
