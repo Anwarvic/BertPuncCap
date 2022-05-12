@@ -51,13 +51,10 @@ class DataHandler:
             A list of case classes for every token.
         """
         tokens, punc_labels, case_labels = [], [], []
-        # combine subwords after tokenization
-        logging.debug("Combining subwords after tokenizing")
-        sentences = [
-            " ".join(self.tokenizer.tokenize(sent)).replace(' ##', '')
-            for sent in sentences
-        ]
+        logging.debug("Extracting tokens & labels from sentences")
         for sent in tqdm(sentences, desc=desc):
+            # combine subwords after tokenization
+            sent = " ".join(self.tokenizer.tokenize(sent)).replace(' ##', '')
             tmp_tokens, tmp_punc_labels, tmp_case_labels = [], [], []
             sent_tokens = sent.split(' ') #tokenize using white-space
             i = 0
@@ -230,23 +227,28 @@ class DataHandler:
     
     def _create_samples(self, sub_tokens):
         """
-        Converts tokens to samples; by sample I mean a complete example with
-        `segment_size` context that the model can be trained on.
+        Converts tokens to samples; by sample I mean an example with
+        `segment_size` context window that the model can be trained on.
         Every example has a sub-token in the middle with `segment_size/2` words
-        on the left and segment_size/2 words on the right.
-        Also sub-tokens will be represented by its index in the `tokenizer`
-        vocabulary.
+        on the left and segment_size/2 words on the right. All sub-tokens will
+        be represented by their index in the `tokenizer`'s vocabulary.
 
         Parameters
         ----------
         sub_tokens: list(str)
-            A list of sub-tokens.
+            A list of sub-tokens exist in the whole data.
         
         Returns
         -------
         out_samples: list(list(int))
             A nested list of samples/examples for the model to be trained on.
             The shape of list should be (num_sub-tokens x segment_size).
+        
+        Raises
+        ------
+        ValueError:
+            When the input sentence length is less than half of the
+            `segment_size`.
         """
         logging.debug("Creating samples from subwords")
         # Make sure there are enough tokens
