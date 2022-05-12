@@ -280,7 +280,7 @@ if __name__ == "__main__":
 
     # load data loaders
     logging.info(f"Loading dataset: {args['dataset']} "
-                + "for langs: [{args['langs']}]")
+                + f"for langs: [{args['langs']}]")
     train_dataloader, valid_dataloader, _ = \
         create_data_loaders(args["dataset"], args["langs"], BERT_tokenizer,
             args["segment_size"], args["batch_size"],
