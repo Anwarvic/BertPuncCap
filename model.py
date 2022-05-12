@@ -53,7 +53,7 @@ class BertPuncCap(nn.Module):
         self.case_fc = nn.Linear(segment_size*hidden_size, case_size)
         self.dropout = nn.Dropout(dropout_rate)
         # load trained model's stat_dict
-        if len(glob("*.ckpt")) > 1:
+        if len(glob(f"{model_path}/*.ckpt")) > 1:
             self.load_state_dict(
                 load_checkpoint(model_path, self.device, option="latest")
             )
