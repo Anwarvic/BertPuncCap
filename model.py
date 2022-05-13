@@ -6,7 +6,12 @@ from torch import nn
 from glob import glob
 from tqdm import tqdm
 
-from utils import *
+from utils import (
+    load_file,
+    parse_yaml,
+    load_checkpoint,
+    apply_labels_to_input,
+)
 from data_handler import DataHandler
 
 
@@ -169,6 +174,7 @@ class BertPuncCap(nn.Module):
 
 
 if __name__ == "__main__":
+    from utils import load_file
     from transformers import BertTokenizer, BertModel
 
     # load mBERT from huggingface's transformers package
