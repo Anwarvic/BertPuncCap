@@ -1,3 +1,4 @@
+import re
 import os
 import yaml
 import torch
@@ -38,7 +39,9 @@ def load_checkpoint(ckpt_path, device, option="best"):
             logging.warn("Couldn't load best checkpoint, backing off to latest")
             option = "latest"
     if option == "latest":
-        latest_checkpoint = sorted(glob(f"{ckpt_path}/*.ckpt"))[-1]
+        checkpoints = glob(f"{ckpt_path}/*.ckpt")
+        checkpoints.remove("best.ckpt") # exclude best.ckpt
+        latest_checkpoint = sort_alphanumeric(checkpoints)[-1]
         logging.info(f"Loading latest checkpoint: {latest_checkpoint}")
         stat_dict = torch.load(
                 latest_checkpoint,
