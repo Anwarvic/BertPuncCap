@@ -40,7 +40,9 @@ def load_checkpoint(ckpt_path, device, option="best"):
             option = "latest"
     if option == "latest":
         checkpoints = glob(f"{ckpt_path}/*.ckpt")
-        checkpoints.remove("best.ckpt") # exclude best.ckpt
+        # exclude best.ckpt
+        if os.path.exists(f"{ckpt_path}/best.ckpt"):
+            checkpoints.remove(f"{ckpt_path}/best.ckpt")
         latest_checkpoint = sort_alphanumeric(checkpoints)[-1]
         logging.info(f"Loading latest checkpoint: {latest_checkpoint}")
         stat_dict = torch.load(
