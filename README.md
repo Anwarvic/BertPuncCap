@@ -17,23 +17,18 @@ task as shown in the following figure:
 </div>
 
 
-## Prerequisites
-To install the dependencies, run the following command:
-```
-pip install -r requirements.txt
-```
+How this model works can be summarized in the following steps:
 
-## How it works
-The method of how BertPuncCap works can be summarized in the following steps:
-
-- BertPuncCap takes an input that consists of `segment_size` tokens. If the
-input is shorter than `segment_size`, then we are going to pad it with the
-edges. The `segment_size` is a hyper-parameter that you can control.
-- Then, the pre-trained BERT will return its representations for the input
-tokens. The shape of the output should be `segment_size x model_dim`.
+- BertPuncCap takes an input sentence that consists of `segment_size=32`
+(by default) tokens. If the input is shorter than `segment_size`, then we are
+going to pad it with the edges (both ends of the input sentence). The
+`segment_size` is a hyper-parameter that you can tune.
+- Then, the pre-trained BERT language model will return the representations for
+the input tokens. The shape of the output should be `segment_size x model_dim`.
+If you are using BERT-base, then the `model_dim=765`.
 - These representations will be sent to the two linear layers for
 classification. One layer should classify the punctuation after each token
-while the  other should classify the case.
+while the other should classify the case.
 - The loss function will be the weighted sum of the punctuation classification
 loss $\text{punc-loss}$ and the capitalization classification loss 
 $\text{cap-loss}$ according to the following formula where $\alpha$ is a 
@@ -57,11 +52,14 @@ this model does.
 > - BertPunc doesn't provide any pre-trained model, while this model provides
 many.
 
-
+## Prerequisites
+To install the dependencies, run the following command:
+```
+pip install -r requirements.txt
+```
 ## Pre-trained Models
 
 You can download the pre-trained models from the following table:
-
 
 <div align="center" class="inline-table">
 <table>
@@ -75,7 +73,7 @@ You can download the pre-trained models from the following table:
         </tr>
     </thead>
     <tr>
-        <td><strong>mbert-base-cased</strong></td>
+        <td><strong>mbert_base_cased</strong></td>
         <td>(
             <a href="https://drive.google.com/file/d/12WFBFswOfzdvW4pXSFtS9TAOPyTmZiGa/view?usp=sharing"> Model</a>, 
             <a href="https://drive.google.com/file/d/1zB_etELwrgzSl-oZiN34607xpdhGohp1/view?usp=sharing"> Configuration</a>
@@ -85,7 +83,7 @@ You can download the pre-trained models from the following table:
         <td>French (fr)</td>
     </tr>
     <tr>
-        <td><strong>mbert-base-cased</strong></td>
+        <td><strong>mbert_base_cased</strong></td>
         <td>(
             <a href=""> Model</a>, 
             <a href=""> Configuration</a>
@@ -108,8 +106,45 @@ You can download the pre-trained models from the following table:
 </table>
 </div>
 
+Now, it's very easy to use these pre-trained models; here is an example:
+
+```python
+>>> from transformers import BertTokenizer, BertModel
+>>> from model import BertPuncCap
+>>> 
+>>> # load mBERT from huggingface's transformers package
+>>> BERT_name = "bert-base-multilingual-cased"
+>>> bert_tokenizer = BertTokenizer.from_pretrained(BERT_name)
+>>> bert_model = BertModel.from_pretrained(BERT_name)
+>>> 
+>>> # load trained checkpoint
+>>> checkpoint_path = os.path.join("models", "mbert_base_cased")
+>>> bert_punc_cap = BertPuncCap(bert_model, bert_tokenizer, checkpoint_path)
+```
+
+Now
 
 ## Train
+
+
+### Punctuations & Cases
+
+The list of punctuations & cases handled by this model can be seen down below:
+
+- Punctuations:
+    - COMMA
+    - PERIOD
+    - QUESTION
+    - EXCLAMATION
+    - COLON
+    - SEMICOLON
+    - O
+
+- Cases:
+    - F (First_Cap): When the first letter is capital.
+    - A (All_Cap): When the whole token is capitalized.
+    - O: Other
+
 
 
 ### Hyper-parameters
