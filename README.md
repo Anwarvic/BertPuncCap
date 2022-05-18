@@ -122,10 +122,42 @@ Now, it's very easy to use these pre-trained models; here is an example:
 >>> bert_punc_cap = BertPuncCap(bert_model, bert_tokenizer, checkpoint_path)
 ```
 
-Now
+Now, we have loaded the model. Let's use it on a simple example:
+```python
+>>> x = ["bonsoir",
+...      "notre planète est recouverte à 70 % d'océan et pourtant étrangement on a choisi de l'appeler « la Terre »"
+... ]
+>>> # start predicting
+>>> bert_punc_cap.predict(x)
+["Bonsoir ,",
+"Notre planète est recouverte à 70 % d ' océan . et pourtant étrangement , On a choisi de l ' appeler « La Terre » ."]
+```
 
 ## Train
 
+To train the model, you need to use the `train.py` script. Here is how you can
+do so:
+
+``` powershell
+python train.py --seed 1234 \
+                --pretrained_bert bert-base-multilingual-cased \
+                --optimizer Adam \
+                --criterion cross_entropy \
+                --alpha 0.5 \
+                --dataset mTEDx \
+                --langs fr \
+                --save_path ./models/mbert_base_cased \
+                --batch_size 1024 \
+                --segment_size 32 \
+                --dropout 0.3 \
+                --lr 0.00001 \
+                --max_epochs 50 \
+                --num_validations 1 \
+                --patience 1 \
+                --stop_metric overall_f1
+```
+
+### Hyper-parameters
 
 ### Punctuations & Cases
 
@@ -147,4 +179,3 @@ The list of punctuations & cases handled by this model can be seen down below:
 
 
 
-### Hyper-parameters
