@@ -268,7 +268,7 @@ if __name__ == "__main__":
     logging.info("Loading BertPuncCap")
     from model import BertPuncCap
     bert_punc_cap = BertPuncCap(BERT_model, BERT_tokenizer,
-            model_path=os.path.join(args["save_path"]))
+            model_path=os.path.join(args["save_path"]), load_option="latest")
     
     # load optimizer
     logging.info(f"Loading optimizer: {args['optimizer']}")
