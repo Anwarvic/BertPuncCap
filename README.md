@@ -201,7 +201,78 @@ this model:
         </td>
         <td>bert-base-multilingual-cased</td>
     </tr>
-
+    <tr>
+        <td><strong>optimizer</strong></td>
+        <td>The optimizer name to train this model on</td>
+        <td>Adam</td>
+        <td>-</td>
+    </tr>
+    <tr>
+        <td><strong>lr</strong></td>
+        <td>The learning rate used by the optimizer.</td>
+        <td>Any positive number.</td>
+        <td>0.00001</td>
+    </tr>
+    <tr>
+        <td><strong>criterion</strong></td>
+        <td>The criterion used to train the model</td>
+        <td>cross_entropy</td>
+        <td>-</td>
+    </tr>
+    <tr>
+        <td><strong>alpha</strong></td>
+        <td>The tuning parameter of punc_loss & cap_loss</td>
+        <td>any value that belongs to [0,1]</td>
+        <td>0.5</td>
+    </tr>
+    <tr>
+        <td><strong>dataset</strong></td>
+        <td>The dataset used for training</td>
+        <td><a href="https://www.openslr.org/100">mTEDx</a></td>
+        <td>mTEDx</td>
+    </tr>
+    <tr>
+        <td><strong>langs</strong></td>
+        <td>List of languages from the dataset that you need to train your model on.</td>
+        <td>Depends on the dataset</td>
+        <td>fr</td>
+    </tr>
+    <tr>
+        <td><strong>save_path</strong></td>
+        <td>The relative/absolute path to save the model.</td>
+        <td>A working path</td>
+        <td>1234-</td>
+    </tr>
+    <tr>
+        <td><strong>batch_size</strong></td>
+        <td>The batch size for training, validating, and testing.</td>
+        <td>Any positive integer value</td>
+        <td>256</td>
+    </tr>
+    <tr>
+        <td><strong>segment_size</strong></td>
+        <td>The segment size of the model.</td>
+        <td>Any positive integer value</td>
+        <td>32</td>
+    </tr>
+    <tr>
+        <td><strong>dropout</strong></td>
+        <td>The dropout rate of the linear layers buit on top of BERT.</td>
+        <td>Any value between 0 and 1.</td>
+        <td>0.3</td>
+    </tr>
+    <tr>
+        <td><strong>max_epochs</strong></td>
+        <td>The maximum number of epochs to train the model.</td>
+        <td>Any positive integer value</td>
+        <td>50</td>
+    </tr>
+    <tr>
+        <td><strong>segment_size</strong></td>
+        <td>The segment size of the model.</td>
+        <td>Any positive integer value</td>
+        <td>32</td>
+    </tr>
 </table>
 </div>
 
