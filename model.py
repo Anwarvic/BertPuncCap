@@ -197,13 +197,9 @@ if __name__ == "__main__":
     checkpoint_path = os.path.join("models", "mbert_base_cased_old")
     bert_punc_cap = BertPuncCap(bert_model, bert_tokenizer, checkpoint_path)
 
-    data_test = load_file('data/mTEDx/fr/test.fr')
+    # re-punctuate & re-capitalize the following example
     x = [
         'bonsoir',
         "notre planète est recouverte à 70 % d'océan et pourtant étrangement on a choisi de l'appeler « la terre »"]
     print(x)
     print(bert_punc_cap.predict(x))
-
-    # print(data_test[:3])
-    # print(data_test[54:55])
-    # print(bert_punc_cap._get_labels(data_test[54:55]))
