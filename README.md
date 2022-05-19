@@ -34,7 +34,7 @@ loss $\text{punc-loss}$ and the capitalization classification loss
 $\text{cap-loss}$ according to the following formula where $\alpha$ is a 
 hyper-parameter that you can set in your `config.yaml` file:
  
-$$loss = \alpha * \text{punc-loss} + (1 - \alpha) * \text{cap-loss}$$
+![formula](https://render.githubusercontent.com/render/math?math=loss = \alpha * \text{punc-loss} + (1 - \alpha) * \text{cap-loss})
 
 
 > **Note:**
