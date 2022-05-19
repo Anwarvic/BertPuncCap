@@ -34,6 +34,8 @@ class BertPuncCap(nn.Module):
             A tokenizer object from the HuggingFace's `transformers` package.
         model_path: str
             The relative/absolute path for the trained model (default: '').
+        load_option: str
+            A flag to load either the `best` model or the `latest` one.
         """
         super(BertPuncCap, self).__init__()
         # save important params
