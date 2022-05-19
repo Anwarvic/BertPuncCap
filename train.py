@@ -180,6 +180,8 @@ if __name__ == "__main__":
                 help='A text describing the pretrianed bert from HuggingFace.')
     parser.add_argument('--optimizer', type=str,
                 help='A text describing the optimizer to be used.')
+    parser.add_argument('--lr', type=float, default=1e-5,
+                help='A float describing the training learning rate.')
     parser.add_argument('--criterion', type=str,
                 help='A text describing the optimizer to be used.')
     parser.add_argument('--alpha', type=float, default=0.5,
@@ -196,14 +198,12 @@ if __name__ == "__main__":
                 help='An integer describing the context size for the model.')
     parser.add_argument('--dropout', type=float, default=0.3,
                 help='A float describing the training dropout rate.')
-    parser.add_argument('--lr', type=float, default=1e-5,
-                help='A float describing the training learning rate.')
     parser.add_argument('--max_epochs', type=int, default=50,
                 help='The maximum number of epochs to train the model.')
     parser.add_argument('--num_validations', type=int, default=1,
             help='An integer describing how many times to validate per epoch.')
     parser.add_argument('--patience', type=int, default=5,
-        help='An integer of how many validations to wait before early stopping.')
+        help='An integer of how many validations to wait for performance improvement before early stopping.')
     parser.add_argument('--stop_metric', type=str,
         choices=["valid_loss", "punc_valid_loss", "case_valid_loss",
                  "punc_overall_f1", "case_overall_f1", "overall_f1"],
