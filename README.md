@@ -52,6 +52,12 @@ this model does.
 > - BertPunc doesn't provide any pre-trained model, while this model provides
 many.
 
+> ## Working Example
+>
+> You can check this [notebook](https://colab.research.google.com/drive/13BHlf9ZSN9bfF_gHckq8ur9U5jiTn0gz?usp=sharing) for the different ways for
+which you can use this model; also for how to get the confusion matrix of
+different classes.
+
 ## Prerequisites
 To install the dependencies, run the following command:
 ```
@@ -66,30 +72,30 @@ You can download the pre-trained models from the following table:
     <thead>
         <tr>
             <th>Name</th>
-            <th>BertPuncCap</th>
+            <th>Pre-trained BertPuncCap</th>
             <th>Training Data</th>
-            <th>BERT</th>
+            <th>Pre-trained BERT</th>
             <th>Supported Languages</th>
         </tr>
     </thead>
     <tr>
-        <td><strong>mbert_base_cased</strong></td>
+        <td><strong>mbert_base_cased_fr</strong></td>
+        <td>(
+            <a href="https://drive.google.com/file/d/15f7tKvEq4BLsAjPZpkh2QXId7KAS9ZKn/view?usp=sharing"> Model</a>, 
+            <a href="https://drive.google.com/file/d/1J7D02HQwZTOouaC1lx8ehVtlQpbCGYHw/view?usp=sharing"> Configuration</a>
+        )</td>
+        <td><a href="https://www.openslr.org/100">mTEDx</a></td>
+        <td>bert-base-multilingual-cased</td>
+        <td>French (fr)</td>
+    </tr>
+    <tr>
+        <td><strong>mbert_base_cased_8langs</strong></td>
         <td>(
             <a href="https://drive.google.com/file/d/12WFBFswOfzdvW4pXSFtS9TAOPyTmZiGa/view?usp=sharing"> Model</a>, 
             <a href="https://drive.google.com/file/d/1zB_etELwrgzSl-oZiN34607xpdhGohp1/view?usp=sharing"> Configuration</a>
         )</td>
-        <td><a href="https://drive.google.com/file/d/1yQZ1Sjb1SOOtjWtfrio92VWTlx00l6-9/view?usp=sharing">mTEDx</a></td>
-        <td><a href="https://huggingface.co/bert-base-multilingual-cased">bert-base-multilingual-cased</a></td>
-        <td>French (fr)</td>
-    </tr>
-    <tr>
-        <td><strong>mbert_base_cased</strong></td>
-        <td>(
-            <a href=""> Model</a>, 
-            <a href=""> Configuration</a>
-        )</td>
-        <td><a href="https://drive.google.com/file/d/1yQZ1Sjb1SOOtjWtfrio92VWTlx00l6-9/view?usp=sharing">mTEDx</a></td>
-        <td><a href="https://huggingface.co/bert-base-multilingual-cased">bert-base-multilingual-cased</a></td>
+        <td><a href="https://www.openslr.org/100">mTEDx</a></td>
+        <td>bert-base-multilingual-cased</td>
         <td>
             <ul>
                 <li> Arabic (ar)</li>
@@ -112,7 +118,7 @@ Now, it's very easy to use these pre-trained models; here is an example:
 >>> from transformers import BertTokenizer, BertModel
 >>> from model import BertPuncCap
 >>> 
->>> # load mBERT from huggingface's transformers package
+>>> # load pre-trained mBERT from HuggingFace's transformers package
 >>> BERT_name = "bert-base-multilingual-cased"
 >>> bert_tokenizer = BertTokenizer.from_pretrained(BERT_name)
 >>> bert_model = BertModel.from_pretrained(BERT_name)
@@ -122,7 +128,7 @@ Now, it's very easy to use these pre-trained models; here is an example:
 >>> bert_punc_cap = BertPuncCap(bert_model, bert_tokenizer, checkpoint_path)
 ```
 
-Now, we have loaded the model. Let's use it on a simple example:
+Now that we have loaded the model, let's use it:
 ```python
 >>> x = ["bonsoir",
 ...      "notre planète est recouverte à 70 % d'océan et pourtant étrangement on a choisi de l'appeler « la Terre »"
