@@ -204,7 +204,7 @@ if __name__ == "__main__":
             help='An integer describing how many times to validate per epoch.')
     parser.add_argument('--patience', type=int, default=5,
         help='An integer of how many validations to wait for performance improvement before early stopping.')
-    parser.add_argument('--stop_metric', type=str,
+    parser.add_argument('--stop_metric', type=str, default="overall_f1",
         choices=["valid_loss", "punc_valid_loss", "case_valid_loss",
                  "punc_overall_f1", "case_overall_f1", "overall_f1"],
         help='The metric at which early-stopping should be applied.')
