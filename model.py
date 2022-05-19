@@ -16,7 +16,13 @@ from data_handler import DataHandler
 
 
 class BertPuncCap(nn.Module):
-    def __init__(self, BERT_model, BERT_tokenizer, model_path=''):
+    def __init__(
+            self,
+            BERT_model,
+            BERT_tokenizer,
+            model_path='',
+            load_option="best"
+        ):
         """
         Initializes the model.
 
@@ -58,9 +64,9 @@ class BertPuncCap(nn.Module):
         self.case_fc = nn.Linear(segment_size*hidden_size, case_size)
         self.dropout = nn.Dropout(dropout_rate)
         # load trained model's stat_dict
-        if len(glob(f"{model_path}/*.ckpt")) > 1:
+        if len(glob(f"{model_path}/*.ckpt")) >= 1:
             self.load_state_dict(
-                load_checkpoint(model_path, self.device, option="latest")
+                load_checkpoint(model_path, self.device, load_option)
             )
         else:
             logging.warn("No checkpoints found, initializing model from scratch!")
@@ -106,8 +112,11 @@ class BertPuncCap(nn.Module):
             re-punctuation task while the other is for the re-capitalization
             task.
         """
-        data_loader = \
-            self._data_handler.create_test_dataloader(sentences, batch_size)
+        data_loader = self._data_handler.create_dataloader(
+            sentences,
+            batch_size,
+            shuffle=False
+        )
         # Get predictions for sub-words
         subwords, punc_pred, case_pred = [], [], []
         sg_size = self.hparams["segment_size"]
@@ -183,9 +192,16 @@ if __name__ == "__main__":
     bert_model = BertModel.from_pretrained(BERT_name)
 
     # load trained checkpoint
-    checkpoint_path = os.path.join("models", "mbert_base_cased")
+    checkpoint_path = os.path.join("models", "mbert_base_cased_old")
     bert_punc_cap = BertPuncCap(bert_model, bert_tokenizer, checkpoint_path)
 
     data_test = load_file('data/mTEDx/fr/test.fr')
-    print(data_test[54:55])
-    print(bert_punc_cap._get_labels(data_test[54:55]))
+    x = [
+        'bonsoir',
+        "notre planète est recouverte à 70 % d'océan et pourtant étrangement on a choisi de l'appeler « la terre »"]
+    print(x)
+    print(bert_punc_cap.predict(x))
+
+    # print(data_test[:3])
+    # print(data_test[54:55])
+    # print(bert_punc_cap._get_labels(data_test[54:55]))
