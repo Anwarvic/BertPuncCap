@@ -165,9 +165,9 @@ python train.py --seed 1234 \
                 --stop_metric overall_f1
 ```
 
-### Hyper-parameters
+### Training Parameters
 
-The following is a full list of all hyper-parameters that can be used with
+The following is a full list of all training parameters that can be used with
 this model:
 
 TODO: table here
