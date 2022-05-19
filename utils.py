@@ -30,9 +30,9 @@ def load_checkpoint(ckpt_path, device, option="best"):
     stat_dict = None
     if option == "best":
         logging.info("Loading best model!")
-        if os.path.exists(os.path.join(ckpt_path, "best")):
+        if os.path.exists(os.path.join(ckpt_path, "best.ckpt")):
             stat_dict = torch.load(
-                os.path.join(ckpt_path, 'best'),
+                os.path.join(ckpt_path, 'best.ckpt'),
                 map_location=device
             )
         else:
@@ -49,12 +49,13 @@ def load_checkpoint(ckpt_path, device, option="best"):
                 latest_checkpoint,
                 map_location=device
         )
-    else:
+    elif option not in {"latest", "best"}:
         raise FileNotFoundError("Can't load pre-trained checkpoint!")
+    # remove unneeded parameters if found
+    logging.debug("Removing old BertPuncCap keys if found")
     new_stat_dict = {}
     ignore_keys = {"bn.weight", "bn.bias", "bn.running_mean",
         "bn.running_var", "bn.num_batches_tracked", "fc.weight", "fc.bias"}
-    logging.debug("Removing old BertPuncCap keys if found")
     if stat_dict:
         for old_key in stat_dict.keys():
             new_key = old_key.partition('.')[-1]
