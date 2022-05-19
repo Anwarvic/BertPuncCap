@@ -30,12 +30,13 @@ If you are using BERT-base, then the `model_dim=765`.
 classification. One layer should classify the punctuation after each token
 while the other should classify the case.
 - The loss function will be the weighted sum of the punctuation classification
-loss $\text{punc-loss}$ and the capitalization classification loss 
-$\text{cap-loss}$ according to the following formula where $\alpha$ is a 
+loss `unc-loss`and the capitalization classification loss 
+`cap-loss` according to the following formula where $\alpha$ is a 
 hyper-parameter that you can set in your `config.yaml` file:
  
-![formula](https://render.githubusercontent.com/render/math?math=loss = \alpha * \text{punc-loss} + (1 - \alpha) * \text{cap-loss})
-
+<div align="center">
+    <img src="https://render.githubusercontent.com/render/math?math=loss=\alpha*\text{punc-loss}+(1-\alpha)*\text{cap-loss})">
+</div>
 
 > **Note:**
 >
