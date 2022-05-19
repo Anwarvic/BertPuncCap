@@ -67,7 +67,7 @@ pip install -r requirements.txt
 
 You can download the pre-trained models from the following table:
 
-<div align="center" class="inline-table">
+<div align="center">
 <table>
     <thead>
         <tr>
@@ -170,7 +170,40 @@ python train.py --seed 1234 \
 The following is a full list of all training parameters that can be used with
 this model:
 
-TODO: table here
+<div align="center">
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Description</th>
+            <th>Possible Values</th>
+            <th>Default</th>
+        </tr>
+    </thead>
+    <tr>
+        <td><strong>seed</strong></td>
+        <td>Random seed</td>
+        <td>Any positive integer value</td>
+        <td>1234</td>
+    </tr>
+    <tr>
+        <td><strong>pretrained_bert</strong></td>
+        <td>The name of the pre-trained BERT model from huggingface</td>
+        <td>
+            <ul>
+                <li>bert-base-cased</li>
+                <li>bert-base-uncased</li>
+                <li>bert-base-multilingual-cased</li>
+                <li>bert-base-multilingual-uncased</li>
+                <li>camembert-base</li>
+                <li>flaubert/flaubert_base_cased</li>
+            </ul>
+        </td>
+        <td>bert-base-multilingual-cased</td>
+    </tr>
+
+</table>
+</div>
 
 ### Punctuations & Cases
 
