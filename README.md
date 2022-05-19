@@ -268,10 +268,31 @@ this model:
         <td>50</td>
     </tr>
     <tr>
-        <td><strong>segment_size</strong></td>
-        <td>The segment size of the model.</td>
+        <td><strong>num_validations</strong></td>
+        <td>The number of validations to perform per epoch.</td>
         <td>Any positive integer value</td>
-        <td>32</td>
+        <td>1</td>
+    </tr>
+    <tr>
+        <td><strong>patience</strong></td>
+        <td>The number of validations to wait for performance improvement before early stopping.</td>
+        <td>Any positive integer value</td>
+        <td>10</td>
+    </tr>
+    <tr>
+        <td><strong>stop_metric</strong></td>
+        <td>The name of the metric to watch for monitor to measure peformance for early stopping</td>
+        <td>
+            <ul>
+                <li>valid_loss</li>
+                <li>punc_valid_loss</li>
+                <li>case_valid_loss</li>
+                <li>punc_overall_f1</li>
+                <li>case_overall_f1</li>
+                <li>overall_f1</li>
+            </ul>
+        </td>
+        <td>overall_f1</td>
     </tr>
 </table>
 </div>
