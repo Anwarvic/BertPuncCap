@@ -189,7 +189,7 @@ if __name__ == "__main__":
     parser.add_argument('--langs', type=str, default="fr",
         help='Comma-separated text determining the languages for training.')
     parser.add_argument('--save_path', type=str,
-        help='A relative/absolute path to load/create the trained model.')
+        help='A relative/absolute path to save the trained model.')
     parser.add_argument('--batch_size', type=int, default=256,
                 help='An integer describing the batch size used for training.')
     parser.add_argument('--segment_size', type=int, default=32,
