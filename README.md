@@ -129,8 +129,10 @@ Now, we have loaded the model. Let's use it on a simple example:
 ... ]
 >>> # start predicting
 >>> bert_punc_cap.predict(x)
-["Bonsoir ,",
-"Notre planète est recouverte à 70 % d ' océan . et pourtant étrangement , On a choisi de l ' appeler « La Terre » ."]
+[
+    'Bonsoir ,',
+    "Notre planète est recouverte à 70 % d ' océan . et pourtant étrangement , on a choisi de l ' appeler « La Terre »"
+]
 ```
 
 ## Train
@@ -159,6 +161,11 @@ python train.py --seed 1234 \
 
 ### Hyper-parameters
 
+The following is a full list of all hyper-parameters that can be used with
+this model:
+
+TODO: table here
+
 ### Punctuations & Cases
 
 The list of punctuations & cases handled by this model can be seen down below:
@@ -176,6 +183,4 @@ The list of punctuations & cases handled by this model can be seen down below:
     - F (First_Cap): When the first letter is capital.
     - A (All_Cap): When the whole token is capitalized.
     - O: Other
-
-
 
