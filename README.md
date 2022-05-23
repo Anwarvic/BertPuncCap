@@ -13,7 +13,7 @@ task as shown in the following figure:
 
 
 <div align="center">
-    <img src="https://i.ibb.co/B6gfKz7/Bert-Punc-Cap.png" width=500px>
+    <img src="https://i.ibb.co/BnZvGRk/bert-punc-cap.png" width=500px>
 </div>
 
 
@@ -64,6 +64,7 @@ To install the dependencies, run the following command:
 ```
 pip install -r requirements.txt
 ```
+
 ## Pre-trained Models
 
 You can download the pre-trained models from the following table:
