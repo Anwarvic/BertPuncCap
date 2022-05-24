@@ -40,7 +40,9 @@ class Trainer:
             "num_validations": num_validations,
             "alpha": alpha,
             "patience": patience,
-            "stop_metric": stop_metric
+            "stop_metric": stop_metric,
+            "punc_length": len(bert_punc_cap.hparams["class_to_punc"]),
+            "case_length": len(bert_punc_cap.hparams["class_to_case"]),
         }
         progress_filepath = os.path.join(self.save_path, "progress.tsv")
         self._progress_writer = ProgressReportWriter(
@@ -79,8 +81,10 @@ class Trainer:
                 case_preds = case_outputs.argmax(dim=1).cpu().data.numpy().flatten()
                 # compute other metrics
                 logging.debug("Computing validation F1 scores")
-                punc_f1 = metrics.f1_score(punc_labels, punc_preds, average=None)
-                case_f1 = metrics.f1_score(case_labels, case_preds, average=None)
+                punc_f1 = metrics.f1_score(punc_labels, punc_preds, average=None,
+                                    labels=range(self.hparams["punc_length"]))
+                case_f1 = metrics.f1_score(case_labels, case_preds, average=None,
+                                    labels=range(self.hparams["case_length"]))
                 # append the info
                 losses.append(loss.cpu().data.numpy())
                 punc_losses.append(punc_loss.cpu().data.numpy())
