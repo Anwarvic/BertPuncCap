@@ -25,12 +25,12 @@ going to pad it with the edges (both ends of the input sentence). The
 `segment_size` is a hyper-parameter that you can tune.
 - Then, the pre-trained BERT language model will return the representations for
 the input tokens. The shape of the output should be `segment_size x model_dim`.
-If you are using BERT-base, then the `model_dim=765`.
+If you are using BERT-base, then the `model_dim=768`.
 - These representations will be sent to the two linear layers for
 classification. One layer should classify the punctuation after each token
 while the other should classify the case.
 - The loss function will be the weighted sum of the punctuation classification
-loss `unc-loss`and the capitalization classification loss 
+loss `punc-loss`and the capitalization classification loss 
 `cap-loss` according to the following formula where $\alpha$ is a 
 hyper-parameter that you can set in your `config.yaml` file:
  
