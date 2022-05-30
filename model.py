@@ -50,6 +50,9 @@ class BertPuncCap(nn.Module):
             "cuda" if torch.cuda.is_available() else "cpu"
         )
         logging.info(f"Device found is: {self.device}")
+        # move bert to device if wasn't moved already
+        if self.bert.device != self.device:
+            self.bert = self.bert.to(self.device)
         # get needed params
         dropout_rate = self.hparams["dropout"]
         hidden_size = self.bert.config.hidden_size
@@ -70,6 +73,7 @@ class BertPuncCap(nn.Module):
             self.load_state_dict(
                 load_checkpoint(model_path, self.device, load_option)
             )
+            logging.info(f"Model was loaded on {self.device}")
         else:
             logging.warn("No checkpoints found, initializing model from scratch!")
 
