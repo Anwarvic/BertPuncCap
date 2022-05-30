@@ -101,6 +101,7 @@ def load_criterion(criterion_name):
         raise ValueError(f"{criterion_name} criterion is not supported!")
 
 def create_data_loaders(
+        data_dir,
         dataset_name,
         langs,
         tokenizer,
@@ -114,6 +115,8 @@ def create_data_loaders(
 
     Parameters
     ----------
+    data_dir: str
+        A relative/absolute path to save the trained model.
     dataset_name: str
         The name of the dataset.
     langs: list(str)
@@ -143,7 +146,7 @@ def create_data_loaders(
         langs = [lang.strip() for lang in langs.split(',')]
         train_sents, valid_sents, test_sents = [], [], []
         for lang in langs:
-            base_path = os.path.join("data", dataset_name, lang)
+            base_path = os.path.join(data_dir, dataset_name, lang)
             with open(os.path.join(base_path, "train."+lang)) as fin:
                 train_sents.extend(fin.readlines())
             with open(os.path.join(base_path, "valid."+lang)) as fin:
@@ -157,13 +160,13 @@ def create_data_loaders(
         DataHandler(tokenizer, segment_size, punc_to_class,case_to_class)
     logging.info("Creating dataloader for train data")
     train_dataloader = \
-            data_handler.create_dataloader(train_sents, batch_size, True)
+            data_handler.create_dataloader(train_sents[:10], batch_size, True)
     logging.info("Creating dataloader for valid data")
     valid_dataloader = \
-            data_handler.create_dataloader(valid_sents, batch_size, True)
+            data_handler.create_dataloader(valid_sents[:10], batch_size, True)
     logging.info("Creating dataloader for test data")
     test_dataloader  = \
-            data_handler.create_dataloader(test_sents,  batch_size)
+            data_handler.create_dataloader(test_sents[:10],  batch_size)
     return train_dataloader, valid_dataloader, test_dataloader
 
 
@@ -182,6 +185,8 @@ if __name__ == "__main__":
                 help='A text describing the optimizer to be used.')
     parser.add_argument('--lr', type=float, default=1e-5,
                 help='A float describing the training learning rate.')
+    parser.add_argument('--data_dir', type=str, default="data",
+                help='A relative/absolute path to load the data.')
     parser.add_argument('--criterion', type=str,
                 help='A text describing the optimizer to be used.')
     parser.add_argument('--alpha', type=float, default=0.5,
@@ -282,7 +287,8 @@ if __name__ == "__main__":
     logging.info(f"Loading dataset: {args['dataset']} "
                 + f"for langs: [{args['langs']}]")
     train_dataloader, valid_dataloader, _ = \
-        create_data_loaders(args["dataset"], args["langs"], BERT_tokenizer,
+        create_data_loaders(args["data_dir"], args["dataset"], args["langs"],
+            BERT_tokenizer,
             args["segment_size"], args["batch_size"],
             args["punc_to_class"], args["case_to_class"])
     
