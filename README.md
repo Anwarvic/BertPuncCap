@@ -53,9 +53,9 @@ this model does.
 > - BertPunc doesn't provide any pre-trained model, while this model provides
 many.
 
-> ## Working Example
->
-> You can check this [notebook](https://colab.research.google.com/drive/13BHlf9ZSN9bfF_gHckq8ur9U5jiTn0gz?usp=sharing) for the different ways for
+## Working Example
+
+You can check this [notebook](https://colab.research.google.com/drive/13BHlf9ZSN9bfF_gHckq8ur9U5jiTn0gz?usp=sharing) for the different ways for
 which you can use this model; also for how to get the confusion matrix of
 different classes.
 
