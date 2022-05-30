@@ -327,7 +327,7 @@ can find important metrics about the training process.
 For example, the following is the training/validation loss:
 
 <div align="center">
-    <img src="https://media.oss.navercorp.com/user/31523/files/cfaaa2bd-d843-45d0-b46b-7636fa01ad0c" width=500px>
+    <img src="https://i.ibb.co/WWKhsW5/loss.png" width=500px>
 </div>
 
 
@@ -336,7 +336,7 @@ all capitalization classes `case_overall_f1`, and all of the classes
 `overall_f1`:
 
 <div align="center">
-    <img src="https://media.oss.navercorp.com/user/31523/files/ece078d7-4254-49db-bc90-5bb18d9e24b4" width=500px>
+    <img src="https://i.ibb.co/6PHNRXn/f1-scores.png" width=500px>
 </div>
 
 
