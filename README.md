@@ -317,4 +317,27 @@ The list of punctuations & cases handled by this model can be seen down below:
     - A (All_Cap): When the whole token is capitalized.
     - O: Other
 
+
+### Progress Tracking
+
+The training progress will be written in a file called `progress.tsv` which can
+be used to monitor the model's performance during training. In this file, you
+can find important metrics about the training process.
+
+For example, the following is the training/validation loss:
+
+<div align="center">
+    <img src="https://media.oss.navercorp.com/user/31523/files/cfaaa2bd-d843-45d0-b46b-7636fa01ad0c" width=500px>
+</div>
+
+
+And the following is the F1-scores of all punctuation classes `punc_overall_f1`,
+all capitalization classes `case_overall_f1`, and all of the classes
+`overall_f1`:
+
+<div align="center">
+    <img src="https://media.oss.navercorp.com/user/31523/files/ece078d7-4254-49db-bc90-5bb18d9e24b4" width=500px>
+</div>
+
+
 TO BE CONTINUED...
